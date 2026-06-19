@@ -1,0 +1,57 @@
+.accept-invite-meta {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  margin-bottom: 0.25rem;
+}
+
+.accept-invite-meta p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.accept-invite-meta strong {
+  color: #6b5478;
+}
+
+[data-theme="light"] .accept-invite-meta strong {
+  color: #5a4668;
+}
+
+.accept-invite-meta__note {
+  margin-top: 0.35rem !important;
+  font-size: 0.78rem !important;
+  opacity: 0.85;
+}
+
+.accept-invite-form {
+  margin-top: 0.25rem;
+}
+
+.field--readonly {
+  opacity: 0.92;
+  cursor: not-allowed;
+}
+
+.field--readonly input {
+  cursor: not-allowed;
+  color: var(--muted, #8ca4cc);
+}
+
+.accept-invite-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: #fecaca;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+[data-theme="light"] .accept-invite-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}

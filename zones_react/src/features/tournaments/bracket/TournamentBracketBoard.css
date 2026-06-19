@@ -1,0 +1,116 @@
+/* شجرة إقصائية — Dark neon + خطوط div (بدون صورة) */
+
+.tbb-root {
+  --tbb-line: rgba(203, 213, 225, 0.45);
+  --tbb-line-bright: rgba(226, 232, 240, 0.92);
+  --tbb-glow: rgba(139, 92, 246, 0.12);
+  min-width: min-content;
+  direction: ltr;
+}
+
+.tbb-grid {
+  display: grid;
+  align-items: stretch;
+  gap: 0;
+}
+
+.tbb-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.55rem;
+  margin-bottom: 0.35rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: linear-gradient(180deg, rgba(46, 16, 101, 0.55), rgba(15, 23, 42, 0.85));
+  box-shadow: 0 0 20px var(--tbb-glow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: rgb(245, 243, 255);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tbb-match-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 0;
+  margin-block: 0.25rem;
+}
+
+/* موصل: شكل U — من مركزَي مباراتين إلى المباراة التالية */
+.tbb-join {
+  position: relative;
+  height: 100%;
+  min-height: 4.5rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.tbb-join__h1 {
+  position: absolute;
+  left: 0;
+  width: 52%;
+  top: 25%;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, transparent 0%, var(--tbb-line-bright) 18%, var(--tbb-line-bright) 100%);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(226, 232, 240, 0.25);
+}
+
+.tbb-join__h2 {
+  position: absolute;
+  left: 0;
+  width: 52%;
+  top: 75%;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, transparent 0%, var(--tbb-line-bright) 18%, var(--tbb-line-bright) 100%);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(226, 232, 240, 0.25);
+}
+
+.tbb-join__v {
+  position: absolute;
+  left: 52%;
+  top: 25%;
+  bottom: 25%;
+  width: 2px;
+  margin-left: -1px;
+  background: linear-gradient(180deg, var(--tbb-line-bright), var(--tbb-line-bright));
+  border-radius: 1px;
+  box-shadow: 0 0 5px rgba(226, 232, 240, 0.2);
+}
+
+.tbb-join__out {
+  position: absolute;
+  left: 52%;
+  width: 48%;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, var(--tbb-line-bright), rgba(226, 232, 240, 0.35));
+  border-radius: 1px;
+}
+
+.tbb-join--simple .tbb-join__v {
+  top: 28%;
+  bottom: 28%;
+}
+
+.tbb-join--simple .tbb-join__h1 {
+  top: 28%;
+}
+
+.tbb-join--simple .tbb-join__h2 {
+  top: 72%;
+}
+
+.tbb-join--simple .tbb-join__out {
+  top: 50%;
+}

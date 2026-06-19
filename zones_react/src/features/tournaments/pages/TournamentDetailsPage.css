@@ -1,0 +1,99 @@
+/* تفاصيل البطولة — وضع فاتح (خلفية بيضاء مثل باقي النوافذ) */
+
+[data-theme="light"] .tournament-details-shell {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+[data-theme="light"] .td-hero-title {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .td-hero-subtitle {
+  color: var(--muted) !important;
+}
+
+[data-theme="light"] .td-data-heading {
+  color: rgba(107, 84, 120, 0.95) !important;
+}
+
+[data-theme="light"] .td-info-cell {
+  background: var(--input-bg) !important;
+  border-color: rgba(107, 84, 120, 0.35) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .td-info-cell:hover {
+  border-color: rgba(107, 84, 120, 0.5) !important;
+  background: #fafafa !important;
+}
+
+[data-theme="light"] .td-info-label {
+  color: var(--muted) !important;
+}
+
+[data-theme="light"] .td-info-value {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .td-data-block {
+  background: #fafafa !important;
+  border-color: rgba(107, 84, 120, 0.35) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .td-block-desc-label {
+  color: var(--muted) !important;
+}
+
+[data-theme="light"] .td-block-desc-text {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .td-empty-panel {
+  background: var(--input-bg) !important;
+  border-color: rgba(107, 84, 120, 0.35) !important;
+}
+
+[data-theme="light"] .td-empty-panel p {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .td-link-back {
+  color: var(--accent) !important;
+}
+
+[data-theme="light"] .tournament-details-shell .td-btn-start {
+  border-color: rgba(107, 84, 120, 0.45) !important;
+  background: linear-gradient(to left, rgba(99, 102, 241, 0.15), rgba(79, 70, 229, 0.12)) !important;
+  color: #4338ca !important;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.08) !important;
+}
+
+[data-theme="light"] .tournament-details-shell .td-btn-finish {
+  border-color: rgba(107, 84, 120, 0.45) !important;
+  background: #f8fafc !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .tournament-details-shell .td-btn-cancel {
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+}
+
+[data-theme="light"] .td-info-icon {
+  color: rgba(107, 84, 120, 0.9) !important;
+}
+
+[data-theme="light"] .td-block-desc-label svg {
+  color: rgba(107, 84, 120, 0.75) !important;
+}
+
+[data-theme="light"] .tournament-details-shell .td-empty-panel .td-link-back {
+  background: rgba(107, 84, 120, 0.08) !important;
+  border-color: rgba(107, 84, 120, 0.45) !important;
+  color: var(--text) !important;
+}

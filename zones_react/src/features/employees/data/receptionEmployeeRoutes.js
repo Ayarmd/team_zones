@@ -1,0 +1,20 @@
+export const RECEPTION_EMPLOYEE_ROUTES = {
+  dashboard: "/employee/reception",
+  reservations: "/employee/reception/reservations",
+  reservationsCalendar: "/employee/reception/reservations/calendar",
+  reservationsBookings: "/employee/reception/reservations/bookings",
+  reservationsSession: "/employee/reception/reservations/session",
+  devices: "/employee/reception/devices",
+  devicesBroken: "/employee/reception/devices/broken",
+  packages: "/employee/reception/packages",
+  offers: "/employee/reception/offers",
+  tournaments: "/employee/reception/tournaments",
+  tournamentsData: "/employee/reception/tournaments/data",
+  tournamentsParticipants: "/employee/reception/tournaments/participants",
+  tournamentParticipants: (id) => `/employee/reception/tournaments/${id}/participants`,
+  tournamentDetails: (id) => `/employee/reception/tournaments/${id}`,
+  tournamentBracket: (id) => `/employee/reception/tournaments/${id}/bracket`,
+  profile: "/employee/reception/profile",
+  changePassword: "/employee/reception/change-password",
+};
+

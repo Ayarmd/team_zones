@@ -1,0 +1,129 @@
+/* إجمالي الإيرادات — Dark Neon (ZONES) */
+
+@import "./FinancialManagementPage.css";
+
+.revenues-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.revenues-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .revenues-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .revenues-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.revenues-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .revenues-charts {
+    grid-template-columns: 1.35fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.revenues-chart-panel {
+  border-radius: 18px;
+  padding: 1.15rem 1.2rem 1.25rem;
+  background: linear-gradient(160deg, rgba(9, 17, 56, 0.94), rgba(6, 10, 28, 0.96));
+  border: 1px solid rgba(47, 75, 192, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(178, 63, 255, 0.1),
+    0 0 24px rgba(25, 110, 255, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.revenues-chart-panel__title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.revenues-line-wrap {
+  flex: 1;
+  width: 100%;
+  min-height: 260px;
+  height: 280px;
+}
+
+.revenues-donut-wrap {
+  flex: 1;
+  width: 100%;
+  min-height: 260px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.revenues-donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.revenues-donut-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.revenues-donut-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.revenues-footnote {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  padding: 0.5rem 0.25rem 0;
+  line-height: 1.55;
+  border-top: 1px solid rgba(47, 75, 192, 0.2);
+}
+
+[data-theme="light"] .revenues-chart-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .revenues-chart-panel__title {
+  color: var(--text);
+}
+
+[data-theme="light"] .revenues-donut-legend__item {
+  color: var(--muted);
+}
+
+[data-theme="light"] .revenues-footnote {
+  color: var(--muted);
+  border-top-color: var(--line);
+}

@@ -1,0 +1,215 @@
+/* نماذج إنشاء البطولة — يتبع ثيم المدير (دارك / فاتح) */
+
+.tform-field-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  padding: 1rem;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.tform-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.tform-helper {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: right;
+}
+
+.tform-input,
+.tform-textarea {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 0.625rem 0.75rem;
+  text-align: right;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tform-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.tform-input::placeholder,
+.tform-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.tform-input:focus,
+.tform-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.tform-suffix {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.tform-toggle-track-off {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+[data-theme="dark"] .tform-toggle-track-off {
+  background: rgba(71, 85, 105, 0.65);
+}
+
+.tform-btn-primary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.25);
+  transition: filter 0.15s ease;
+}
+
+.tform-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.tform-btn-secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.tform-btn-secondary:hover {
+  border-color: var(--accent);
+  filter: brightness(1.05);
+}
+
+[data-theme="light"] .tform-btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+.create-tournament-shell {
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.create-tournament-footer {
+  border-top: 1px solid var(--line);
+}
+
+.tform-cover-btn {
+  display: inline-flex;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.tform-cover-btn:hover {
+  border-color: var(--accent);
+}
+
+.tform-cover-remove {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.12);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fecaca;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+[data-theme="light"] .tform-cover-remove {
+  color: #9f1239;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.tform-cover-remove:hover {
+  background: rgba(244, 63, 94, 0.22);
+}
+
+[data-theme="light"] .tform-cover-remove:hover {
+  background: #ffe4e6;
+}
+
+.tform-cover-preview {
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+}
+
+.tform-cover-error {
+  margin-top: 0.5rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f87171;
+}
+
+[data-theme="light"] .tform-cover-error {
+  color: #dc2626;
+}
+
+/* صفحة الإنشاء — نصوص وحقول أصلية تتبع الثيم */
+.create-tournament-page {
+  color: var(--text);
+}
+
+[data-theme="dark"] .create-tournament-page {
+  color-scheme: dark;
+}
+
+[data-theme="light"] .create-tournament-page {
+  color-scheme: light;
+}

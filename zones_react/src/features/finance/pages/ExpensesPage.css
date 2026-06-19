@@ -1,0 +1,112 @@
+/* عرض المصروفات — Dark Neon (ZONES) */
+
+@import "./FinancialManagementPage.css";
+
+.expenses-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.expenses-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .expenses-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .expenses-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.expenses-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .expenses-charts {
+    grid-template-columns: 1.35fr 1fr;
+    align-items: stretch;
+  }
+}
+
+.expenses-chart-panel {
+  border-radius: 18px;
+  padding: 1.15rem 1.2rem 1.25rem;
+  background: linear-gradient(160deg, rgba(18, 10, 14, 0.94), rgba(6, 10, 28, 0.96));
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(251, 113, 133, 0.1),
+    0 0 24px rgba(244, 63, 94, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.expenses-chart-panel__title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.expenses-line-wrap,
+.expenses-donut-wrap {
+  flex: 1;
+  width: 100%;
+  min-height: 260px;
+  height: 280px;
+}
+
+.expenses-donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expenses-donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.expenses-donut-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.expenses-donut-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+[data-theme="light"] .expenses-chart-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .expenses-chart-panel__title {
+  color: var(--text);
+}
+
+[data-theme="light"] .expenses-donut-legend__item {
+  color: var(--muted);
+}

@@ -1,0 +1,194 @@
+/* صافي الأرباح — Dark Neon (ZONES) */
+
+@import "./FinancialManagementPage.css";
+
+.net-profit-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.net-profit-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .net-profit-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .net-profit-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.net-profit-chart-panel {
+  border-radius: 18px;
+  padding: 1.15rem 1.2rem 1.35rem;
+  background: linear-gradient(160deg, rgba(8, 18, 14, 0.94), rgba(6, 10, 28, 0.96));
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(52, 211, 153, 0.1),
+    0 0 28px rgba(52, 211, 153, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.net-profit-chart-panel__title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.net-profit-chart-wrap {
+  width: 100%;
+  min-height: 300px;
+  height: 320px;
+}
+
+.net-profit-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .net-profit-mini-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.net-profit-mini {
+  border-radius: 14px;
+  padding: 1rem 1.05rem;
+  background: rgba(6, 12, 34, 0.72);
+  border: 1px solid rgba(55, 73, 140, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 118px;
+}
+
+.net-profit-mini--cyan {
+  border-color: rgba(34, 211, 238, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 0 18px rgba(34, 211, 238, 0.1);
+}
+
+.net-profit-mini--purple {
+  border-color: rgba(192, 132, 252, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(178, 63, 255, 0.08),
+    0 0 18px rgba(168, 85, 247, 0.1);
+}
+
+.net-profit-mini--rose {
+  border-color: rgba(251, 113, 133, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(251, 113, 133, 0.06),
+    0 0 16px rgba(244, 63, 94, 0.08);
+}
+
+.net-profit-mini__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.net-profit-mini__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.net-profit-mini__icon {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.net-profit-mini__icon--green {
+  color: #6ee7b7;
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.45));
+}
+
+.net-profit-mini__icon--cyan {
+  color: #7dd3fc;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.4));
+}
+
+.net-profit-mini__icon--purple {
+  color: #d8b4fe;
+  filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.4));
+}
+
+.net-profit-mini__value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.net-profit-mini__sub {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+[data-theme="light"] .net-profit-chart-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .net-profit-chart-panel__title {
+  color: var(--text);
+}
+
+[data-theme="light"] .net-profit-mini {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  box-shadow: none;
+}
+
+[data-theme="light"] .net-profit-mini--cyan {
+  border-color: var(--input-border);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .net-profit-mini--purple {
+  border-color: var(--input-border);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .net-profit-mini--rose {
+  border-color: var(--input-border);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .net-profit-mini__label {
+  color: var(--muted);
+}
+
+[data-theme="light"] .net-profit-mini__value {
+  color: var(--text);
+}
+
+[data-theme="light"] .net-profit-mini__sub {
+  color: var(--muted);
+}
+
+[data-theme="light"] .net-profit-mini__icon--green,
+[data-theme="light"] .net-profit-mini__icon--cyan,
+[data-theme="light"] .net-profit-mini__icon--purple {
+  color: var(--accent);
+  filter: none;
+}
