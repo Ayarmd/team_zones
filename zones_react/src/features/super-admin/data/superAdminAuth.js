@@ -1,4 +1,5 @@
 import { SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD, SUPER_ADMIN_ROUTES } from "./superAdminConstants";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 
 const SESSION_KEY = "zones-super-admin-session";
 export const SUPER_ADMIN_PROFILE_EVENT = "zones-super-admin-profile-updated";
@@ -15,7 +16,7 @@ const DEFAULT_PROFILE = {
 };
 
 export function authenticateSuperAdmin(email, password) {
-  const normalized = String(email || "").trim().toLowerCase();
+  const normalized = normalizeGmailEmail(email);
   if (normalized === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
     return { ...DEFAULT_PROFILE };
   }
@@ -36,12 +37,16 @@ export function getSuperAdminSession() {
     const next = { ...DEFAULT_PROFILE, ...parsed };
     if (!parsed.fullName || parsed.fullName === "الأدمن العام") next.fullName = DEFAULT_PROFILE.fullName;
     if (!parsed.avatar) next.avatar = DEFAULT_PROFILE.avatar;
+    const normalized = normalizeGmailEmail(parsed.email);
     if (
       !parsed.email ||
       parsed.email === "admin@hall-platform.ly" ||
       parsed.email === "superadmin@system.com"
-    )
+    ) {
       next.email = SUPER_ADMIN_EMAIL;
+    } else {
+      next.email = normalized;
+    }
     return next;
   } catch {
     return null;

@@ -8,13 +8,19 @@ import {
   awardPointsForCompletedSession,
   redeemPointsForBooking,
 } from "../../loyalty/data/loyaltyPointsStorage";
+import { recordCompletedSessionRevenue } from "./bookingRevenueStorage";
+import {
+  getAppCustomerBanBlockMessage,
+  isAppCustomerBanned,
+  registerNoShowFromSlot,
+} from "./customerBanStorage";
 
 const STORAGE_KEY = "zones-reception-calendar-v1";
 
 export const RECEPTION_CALENDAR_EVENT = "zones-reception-calendar-updated";
 
-/** إلغاء تلقائي إذا لم يحضر الزبون قبل 30 دقيقة من بدء اللعب */
-export const NO_SHOW_GRACE_MS = 30 * 60 * 1000;
+/** فترة سماح 14 دقيقة بعد وقت الحجز — ثم No-Show */
+export const NO_SHOW_GRACE_MS = 14 * 60 * 1000;
 
 export const SLOT_STATUS = {
   reserved: "reserved",
@@ -24,6 +30,12 @@ export const SLOT_STATUS = {
 export const ATTENDANCE_STATUS = {
   awaiting: "awaiting",
   checkedIn: "checked_in",
+  noShow: "no_show",
+};
+
+export const BOOKING_STATUS = {
+  ...SLOT_STATUS,
+  noShow: "no_show",
 };
 
 export const PAYMENT_TYPES = {
@@ -54,19 +66,34 @@ export function parseSlotStartMs(date, hour) {
   return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
 }
 
-function purgeNoShowBookings(slots) {
+function applyNoShowPolicy(slots) {
   const now = Date.now();
-  return slots.filter((slot) => {
+  const remaining = [];
+
+  for (const slot of slots) {
     if (
       slot.status !== SLOT_STATUS.reserved ||
       slot.attendanceStatus !== ATTENDANCE_STATUS.awaiting
     ) {
-      return true;
+      remaining.push(slot);
+      continue;
     }
+
     const startMs = parseSlotStartMs(slot.date, slot.hour);
-    if (startMs == null) return true;
-    return now < startMs - NO_SHOW_GRACE_MS;
-  });
+    if (startMs == null) {
+      remaining.push(slot);
+      continue;
+    }
+
+    if (now >= startMs + NO_SHOW_GRACE_MS) {
+      registerNoShowFromSlot(slot);
+      continue;
+    }
+
+    remaining.push(slot);
+  }
+
+  return remaining;
 }
 
 function notifyUpdated() {
@@ -242,11 +269,11 @@ export function loadCalendarSlots() {
       const parsed = JSON.parse(raw);
       slots = Array.isArray(parsed) ? parsed.map(normalizeSlot) : buildSeedSlots().map(normalizeSlot);
     }
-    const purged = purgeNoShowBookings(slots);
-    if (purged.length !== slots.length) {
-      persistCalendarSlots(purged);
+    const processed = applyNoShowPolicy(slots);
+    if (processed.length !== slots.length) {
+      persistCalendarSlots(processed);
     }
-    return purged;
+    return processed;
   } catch {
     return buildSeedSlots().map(normalizeSlot);
   }
@@ -307,6 +334,10 @@ export function bookCalendarSlot({
     return { ok: false, error: getBookingsStopBlockMessage() };
   }
 
+  if (source === "app" && phone.trim() && isAppCustomerBanned(phone.trim())) {
+    return { ok: false, error: getAppCustomerBanBlockMessage(phone.trim()) };
+  }
+
   const slots = loadCalendarSlots();
   const existing = findCalendarSlot(deviceId, date, hour, slots);
   if (existing) return { ok: false, error: "هذا الموعد محجوز مسبقاً." };
@@ -344,7 +375,8 @@ export function bookCalendarSlot({
     isPaid: Boolean(isPaid) || paymentType === PAYMENT_TYPES.paid.value || paymentType === PAYMENT_TYPES.points.value,
     source,
     bookingType: source === "app" ? BOOKING_SOURCES.app.label : BOOKING_SOURCES.manual.label,
-    attendanceStatus: ATTENDANCE_STATUS.awaiting,
+    attendanceStatus:
+      source === "app" ? ATTENDANCE_STATUS.awaiting : ATTENDANCE_STATUS.checkedIn,
     createdAt: new Date().toISOString(),
   });
 
@@ -394,11 +426,15 @@ export function startCalendarSession(deviceId, date, hour) {
 export function endCalendarSession(deviceId, date, hour) {
   const slots = loadCalendarSlots();
   const slot = slots.find((s) => s.deviceId === deviceId && s.date === date && s.hour === hour) ?? null;
-  const pointsResult =
-    slot?.status === SLOT_STATUS.active ? awardPointsForCompletedSession(slot) : null;
+  let pointsResult = null;
+  let revenueEntry = null;
+  if (slot?.status === SLOT_STATUS.active) {
+    revenueEntry = recordCompletedSessionRevenue(slot);
+    pointsResult = awardPointsForCompletedSession(slot);
+  }
   const next = slots.filter((s) => !(s.deviceId === deviceId && s.date === date && s.hour === hour));
   saveCalendarSlots(next);
-  return { ok: true, pointsResult, slot };
+  return { ok: true, pointsResult, revenueEntry, slot };
 }
 
 export function getAwaitingBookings(slots = loadCalendarSlots()) {

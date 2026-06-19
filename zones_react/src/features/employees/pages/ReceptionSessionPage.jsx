@@ -16,6 +16,7 @@ import {
   startCalendarSession,
 } from "../data/receptionCalendarStorage";
 import { getCustomerPointsBalance } from "../../loyalty/data/loyaltyPointsStorage";
+import { formatCurrency } from "../../finance/utils/financeData";
 import { isAppBooking } from "../utils/receptionBookingsFilters";
 import { loadCalendarDevices } from "../utils/receptionCalendarUtils";
 import {
@@ -104,6 +105,11 @@ export default function ReceptionSessionPage() {
         `لقد حصل الزبون على ${result.pointsResult.earned} نقطة جديدة. الرصيد: ${result.pointsResult.balance}`,
         "نقاط الولاء",
       );
+    } else if (result.revenueEntry?.revenue > 0) {
+      zonesToastSuccess(
+        `تم تسجيل ${formatCurrency(result.revenueEntry.revenue)} في إيرادات اليوم.`,
+        "تم إنهاء الجلسة",
+      );
     } else {
       zonesToastSuccess("تم إنهاء الجلسة.");
     }
@@ -189,10 +195,10 @@ export default function ReceptionSessionPage() {
                         <div className="rsess-actions">
                           {isActive ? (
                             <span
-                              className={`rsess-timer ${getSessionRemainingMs(slot.date, slot.hour, now) === 0 ? "rsess-timer--done" : ""}`}
+                              className={`rsess-timer ${getSessionRemainingMs(slot.date, slot.hour, slot.hourTo, now) === 0 ? "rsess-timer--done" : ""}`}
                               dir="ltr"
                             >
-                              {formatSessionRemaining(getSessionRemainingMs(slot.date, slot.hour, now))}
+                              {formatSessionRemaining(getSessionRemainingMs(slot.date, slot.hour, slot.hourTo, now))}
                             </span>
                           ) : null}
                           <TableActionsGroup>

@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -21,108 +21,24 @@ import {
 } from "recharts";
 import ManagerLayout from "../../../shared/layouts/ManagerLayout";
 import DownloadReportModal from "../components/DownloadReportModal";
+import { BOOKING_REVENUE_EVENT } from "../../employees/data/bookingRevenueStorage";
+import { RECEPTION_CALENDAR_EVENT } from "../../employees/data/receptionCalendarStorage";
+import { EXPENSES_STORAGE_EVENT } from "../data/expensesStorage";
 import {
   MONTHS_AR,
   formatCurrency,
   formatPct,
-  mix,
   yearOptions,
 } from "../utils/financeData";
+import {
+  buildOverviewChartSeries,
+  deriveOverviewInsights,
+  deriveOverviewTotals,
+} from "../utils/financeOverviewHelpers";
 import "./FinancialManagementPage.css";
 import { useTheme } from "../../../shared/theme/useTheme";
 
-function daysInMonth(y, m) {
-  return new Date(y, m, 0).getDate();
-}
-
-function buildChartSeries(year, month, granularity) {
-  const seed = year * 400 + month * 17 + (granularity === "daily" ? 3 : granularity === "weekly" ? 7 : 11);
-  const out = [];
-
-  if (granularity === "daily") {
-    const n = daysInMonth(year, month);
-    for (let d = 1; d <= n; d += 1) {
-      const t = seed + d * 1.7;
-      const wave = mix(t) * 0.55 + mix(t + 4) * 0.45;
-      const revenue = 3200 + wave * 4200 + mix(t + 2) * 1800;
-      const expenses = revenue * (0.28 + mix(t + 5) * 0.22);
-      out.push({ label: String(d), revenue, expenses, netProfit: revenue - expenses });
-    }
-    return out;
-  }
-
-  if (granularity === "weekly") {
-    for (let w = 1; w <= 4; w += 1) {
-      const t = seed + w * 11;
-      const revenue = 18000 + mix(t) * 22000 + mix(t + 3) * 8000;
-      const expenses = revenue * (0.3 + mix(t + 1) * 0.2);
-      out.push({
-        label: `الأسبوع ${w}`,
-        revenue,
-        expenses,
-        netProfit: revenue - expenses,
-      });
-    }
-    return out;
-  }
-
-  for (let m = 0; m < 12; m += 1) {
-    const t = seed + m * 19 + year;
-    const revenue = 95000 + mix(t) * 72000 + mix(t + 6) * 40000;
-    const expenses = revenue * (0.32 + mix(t + 2) * 0.18);
-    out.push({
-      label: MONTHS_AR[m].slice(0, 3),
-      revenue,
-      expenses,
-      netProfit: revenue - expenses,
-    });
-  }
-  return out;
-}
-
-function deriveTotals(year, month) {
-  const seed = year * 400 + month * 23;
-  const revenue = 128000 + mix(seed) * 92000 + mix(seed + 1) * 48000;
-  const expenses = revenue * (0.31 + mix(seed + 3) * 0.21);
-  const net = revenue - expenses;
-  const prevRev = revenue / (1 + (mix(seed + 5) - 0.5) * 0.14);
-  const prevExp = expenses / (1 + (mix(seed + 6) - 0.5) * 0.12);
-  const prevNet = prevRev - prevExp;
-  return {
-    revenue,
-    expenses,
-    net,
-    revDelta: ((revenue - prevRev) / prevRev) * 100,
-    expDelta: ((expenses - prevExp) / prevExp) * 100,
-    netDelta: ((net - prevNet) / Math.abs(prevNet || 1)) * 100,
-  };
-}
-
-function deriveInsights(year, month, series, granularity) {
-  const seed = year * 300 + month * 13 + (granularity === "monthly" ? 99 : 0);
-  const devices = [
-    { name: "PS5 — منطقة VIP", hours: 138 + mix(seed) * 42 },
-    { name: "PC Gaming — الصف أ", hours: 124 + mix(seed + 1) * 38 },
-    { name: "Xbox Series X — ركن أ", hours: 112 + mix(seed + 2) * 36 },
-  ];
-  const top = devices[Math.floor(mix(seed + 4) * devices.length)];
-  let best = series[0];
-  let worst = series[0];
-  for (const p of series) {
-    if (p.netProfit > best.netProfit) best = p;
-    if (p.netProfit < worst.netProfit) worst = p;
-  }
-  const dailyAvg = 42 + mix(seed + 8) * 28;
-  return {
-    topDevice: top.name,
-    topHours: Math.round(top.hours),
-    bestLabel: best.label,
-    bestProfit: best.netProfit,
-    worstLabel: worst.label,
-    worstProfit: worst.netProfit,
-    dailyBookings: Math.round(dailyAvg * 10) / 10,
-  };
-}
+const FINANCE_REFRESH_EVENTS = [BOOKING_REVENUE_EVENT, RECEPTION_CALENDAR_EVENT, EXPENSES_STORAGE_EVENT];
 
 function FinanceTooltip({ active, payload, label, isLight }) {
   if (!active || !payload?.length) return null;
@@ -173,19 +89,34 @@ export default function FinancialManagementPage() {
   const { theme } = useTheme();
   const isChartLight = theme === "light";
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [granularity, setGranularity] = useState("daily");
 
+  useEffect(() => {
+    const refresh = () => setRefreshKey((k) => k + 1);
+    for (const eventName of FINANCE_REFRESH_EVENTS) {
+      window.addEventListener(eventName, refresh);
+    }
+    window.addEventListener("focus", refresh);
+    return () => {
+      for (const eventName of FINANCE_REFRESH_EVENTS) {
+        window.removeEventListener(eventName, refresh);
+      }
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
+
   const chartSeries = useMemo(
-    () => buildChartSeries(year, month, granularity),
-    [year, month, granularity],
+    () => buildOverviewChartSeries(year, month, granularity),
+    [year, month, granularity, refreshKey],
   );
-  const totals = useMemo(() => deriveTotals(year, month), [year, month]);
+  const totals = useMemo(() => deriveOverviewTotals(year, month), [year, month, refreshKey]);
   const insights = useMemo(
-    () => deriveInsights(year, month, chartSeries, granularity),
-    [year, month, chartSeries, granularity],
+    () => deriveOverviewInsights(year, month, chartSeries),
+    [year, month, chartSeries, refreshKey],
   );
   const yearsOptions = useMemo(() => yearOptions(), []);
 
@@ -360,7 +291,7 @@ export default function FinancialManagementPage() {
             <div className="finance-mini__row">
               <div>
                 <div className="finance-mini__value">{insights.topDevice}</div>
-                <div className="finance-mini__sub">{insights.topHours} ساعة</div>
+                <div className="finance-mini__sub">{formatCurrency(insights.topDeviceProfit)}</div>
               </div>
               <span className="finance-mini__icon" aria-hidden><Gamepad2 size={22} strokeWidth={2} /></span>
             </div>

@@ -5,8 +5,8 @@ const HISTORY_KEY = "zones-loyalty-history-v1";
 
 export const LOYALTY_UPDATED_EVENT = "zones-loyalty-updated";
 
-export const DEFAULT_POINTS_PER_SESSION = 10;
-export const DEFAULT_REDEMPTION_THRESHOLD = 100;
+export const DEFAULT_POINTS_PER_SESSION = 20;
+export const DEFAULT_REDEMPTION_THRESHOLD = 120;
 
 function clampPositiveInt(value, fallback) {
   const n = Number.parseInt(String(value), 10);
@@ -80,8 +80,8 @@ function buildSeedCustomers() {
       phone: "0912345678",
       name: "محمد الزليطني",
       email: "",
-      pointsBalance: 20,
-      lifetimeEarned: 20,
+      pointsBalance: 150,
+      lifetimeEarned: 150,
       lifetimeRedeemed: 0,
       updatedAt: now,
     },
@@ -188,8 +188,8 @@ export function redeemPointsForBooking({ phone, name = "", email = "", bookingCo
     };
   }
 
-  const deducted = customer.pointsBalance;
-  const balanceAfter = 0;
+  const deducted = redemptionThreshold;
+  const balanceAfter = Math.max(0, (customer.pointsBalance || 0) - deducted);
   const customers = loadLoyaltyCustomers().map((c) =>
     c.id === customer.id
       ? {
@@ -212,7 +212,7 @@ export function redeemPointsForBooking({ phone, name = "", email = "", bookingCo
     points: -deducted,
     balanceAfter,
     bookingCode,
-    note: `دفع جلسة بالنقاط — خصم ${deducted} نقطة`,
+    note: `دفع جلسة بالنقاط — خصم ${deducted} نقطة (الحد الأدنى)`,
   });
 
   return { ok: true, deducted, balance: balanceAfter };

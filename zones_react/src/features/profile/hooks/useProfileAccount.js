@@ -116,14 +116,14 @@ export function useProfileAccount(roleHint) {
 
     const step1 = await zonesSwal({
       title: "تغيير كلمة المرور",
-      text: "أدخل الرمز الحالي للتحقق",
+      text: "أدخل كلمة المرور الحالية للتحقق",
       input: "password",
-      inputPlaceholder: "الرمز الحالي",
+      inputPlaceholder: "كلمة المرور الحالية",
       inputAttributes: { autocomplete: "current-password", dir: "ltr" },
       showCancelButton: true,
       confirmButtonText: "متابعة",
       cancelButtonText: "إلغاء",
-      inputValidator: (v) => (!v ? "أدخل الرمز الحالي" : undefined),
+      inputValidator: (v) => (!v ? "أدخل كلمة المرور الحالية" : undefined),
     });
     if (!step1.isConfirmed || !step1.value) return;
 
@@ -134,10 +134,10 @@ export function useProfileAccount(roleHint) {
     }
 
     const step2 = await zonesSwal({
-      title: "الرمز الجديد",
+      title: "كلمة المرور الجديدة",
       text: "أدخل كلمة المرور الجديدة",
       input: "password",
-      inputPlaceholder: "الرمز الجديد",
+      inputPlaceholder: "كلمة المرور الجديدة",
       inputAttributes: { autocomplete: "new-password", dir: "ltr" },
       showCancelButton: true,
       confirmButtonText: "متابعة",
@@ -147,10 +147,10 @@ export function useProfileAccount(roleHint) {
     if (!step2.isConfirmed || !step2.value) return;
 
     const step3 = await zonesSwal({
-      title: "تأكيد الرمز الجديد",
+      title: "تأكيد كلمة المرور الجديدة",
       text: "أعد إدخال كلمة المرور الجديدة",
       input: "password",
-      inputPlaceholder: "تأكيد الرمز",
+      inputPlaceholder: "تأكيد كلمة المرور",
       inputAttributes: { autocomplete: "new-password", dir: "ltr" },
       showCancelButton: true,
       confirmButtonText: "حفظ",
@@ -160,7 +160,7 @@ export function useProfileAccount(roleHint) {
     if (!step3.isConfirmed || !step3.value) return;
 
     if (step2.value !== step3.value) {
-      zonesToastError("تأكيد الرمز غير متطابق.");
+      zonesToastError("تأكيد كلمة المرور غير متطابق.");
       return;
     }
 
@@ -187,15 +187,15 @@ export function useProfileAccount(roleHint) {
 
     const { value: password } = await zonesSwal({
       title: "تأكيد الحذف",
-      text: "أدخل الرمز الحالي لحذف الحساب",
+      text: "أدخل كلمة المرور الحالية لحذف الحساب",
       input: "password",
-      inputPlaceholder: "الرمز الحالي",
+      inputPlaceholder: "كلمة المرور الحالية",
       inputAttributes: { autocomplete: "current-password", dir: "ltr" },
       showCancelButton: true,
       confirmButtonText: "حذف نهائياً",
       cancelButtonText: "إلغاء",
       confirmButtonColor: "#dc2626",
-      inputValidator: (v) => (!v ? "أدخل الرمز" : undefined),
+      inputValidator: (v) => (!v ? "أدخل كلمة المرور" : undefined),
     });
     if (!password) return;
 

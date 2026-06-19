@@ -180,8 +180,10 @@ export default function ReceptionCalendarBookModal({
               <span className="rcal-modal-label">نوع الدفع</span>
               {phone.trim() ? (
                 <p className="mb-2 text-[10px] font-semibold text-[#6B5478]">
-                  رصيد النقاط: {pointsBalance} — الحد للدفع: {loyaltySettings.redemptionThreshold} نقطة
-                  {!pointsPayEnabled ? " (غير كافٍ للدفع بالنقاط)" : ""}
+                  رصيد النقاط: {pointsBalance} — الحد الأدنى للدفع: {loyaltySettings.redemptionThreshold} نقطة
+                  {pointsPayEnabled
+                    ? ` (يُخصم ${loyaltySettings.redemptionThreshold} — يبقى ${pointsBalance - loyaltySettings.redemptionThreshold})`
+                    : " (غير كافٍ)"}
                 </p>
               ) : null}
               <select

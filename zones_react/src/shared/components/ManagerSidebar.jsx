@@ -322,16 +322,6 @@ export default function ManagerSidebar({ onNavigate }) {
         </NavLink>
 
         <MenuGroup
-          group={{ ...MANAGER_MENU.account, icon: User }}
-          icon={User}
-          open={open}
-          toggle={toggle}
-          onNavigate={navHandlers}
-          pathname={pathname}
-          search={search}
-        />
-
-        <MenuGroup
           group={MANAGER_MENU.hall}
           icon={Building2}
           open={open}
@@ -400,6 +390,16 @@ export default function ManagerSidebar({ onNavigate }) {
         <MenuGroup
           group={MANAGER_MENU.finance}
           icon={BarChart3}
+          open={open}
+          toggle={toggle}
+          onNavigate={navHandlers}
+          pathname={pathname}
+          search={search}
+        />
+
+        <MenuGroup
+          group={{ ...MANAGER_MENU.account, icon: User }}
+          icon={User}
           open={open}
           toggle={toggle}
           onNavigate={navHandlers}

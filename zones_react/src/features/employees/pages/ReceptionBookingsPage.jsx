@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, UserCheck } from "lucide-react";
-import { Select } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { zonesConfirm, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
 import IconButton from "../../../shared/components/ui/IconButton";
 import TableActionsGroup from "../../../shared/components/ui/TableActionsGroup";
@@ -10,6 +8,8 @@ import PageHeader from "../../super-admin/components/ui/PageHeader";
 import SearchBar from "../../super-admin/components/ui/SearchBar";
 import TablePagination from "../../../shared/components/TablePagination";
 import ReceptionBookingVoucherModal from "../components/ReceptionBookingVoucherModal";
+import ReceptionBookingsDateNav from "../components/ReceptionBookingsDateNav";
+import ReceptionBookingsSourceFilter from "../components/ReceptionBookingsSourceFilter";
 import {
   checkInBooking,
   getAwaitingBookings,
@@ -20,10 +20,6 @@ import {
 } from "../data/receptionCalendarStorage";
 import { formatCalendarDate, getHallWorkHours, loadCalendarDevices } from "../utils/receptionCalendarUtils";
 import {
-  BOOKING_SOURCE_FILTERS,
-  bookingInCurrentMonth,
-  getCurrentMonthLabel,
-  getCurrentWeekDays,
   isAppBooking,
   isManualBooking,
 } from "../utils/receptionBookingsFilters";
@@ -35,59 +31,21 @@ import {
 const PAGE_SIZE = 8;
 const AUTO_REFRESH_MS = 60_000;
 
-function defaultWeekDayFilter(weekDays) {
-  const today = todayIso();
-  return weekDays.some((d) => d.iso === today) ? today : "all";
-}
-
-function WeekDayCircle({ active, disabled, onClick, label, subLabel, title, ringToday }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      title={title}
-      onClick={onClick}
-      className={cn(
-        "flex h-[3.25rem] w-[3.25rem] shrink-0 flex-col items-center justify-center rounded-full border text-center transition",
-        active
-          ? "border-[#6B5478] bg-[#6B5478] text-white shadow-sm shadow-[#6B5478]/25"
-          : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#6B5478]/40 hover:bg-[#6B5478]/8 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300",
-        ringToday && !active ? "ring-2 ring-[#6B5478]/25" : "",
-        disabled ? "cursor-not-allowed opacity-35 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-700 dark:hover:bg-gray-800" : "",
-      )}
-    >
-      <span className="max-w-[2.75rem] truncate text-[8px] font-extrabold leading-tight">{label}</span>
-      {subLabel ? (
-        <span className={cn("mt-0.5 text-[10px] font-bold leading-none", active ? "text-white/90" : "opacity-70")} dir="ltr">
-          {subLabel}
-        </span>
-      ) : null}
-    </button>
-  );
-}
-
 export default function ReceptionBookingsPage() {
   const [slots, setSlots] = useState(() => loadCalendarSlots());
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
-  const [weekDayFilter, setWeekDayFilter] = useState("all");
+  const [selectedDate, setSelectedDate] = useState(() => todayIso());
   const [page, setPage] = useState(1);
   const [voucherSlot, setVoucherSlot] = useState(null);
-  const [monthTick, setMonthTick] = useState(() => Date.now());
   const [loyaltyTick, setLoyaltyTick] = useState(0);
 
   const devices = useMemo(() => loadCalendarDevices(), [slots]);
   const deviceMap = useMemo(() => new Map(devices.map((d) => [d.id, d])), [devices]);
   const hallName = useMemo(() => getHallWorkHours().hallName, []);
 
-  const referenceDate = useMemo(() => new Date(monthTick), [monthTick]);
-  const weekDays = useMemo(() => getCurrentWeekDays(referenceDate), [referenceDate]);
-  const monthLabel = useMemo(() => getCurrentMonthLabel(referenceDate), [referenceDate]);
-  const weekIsoSet = useMemo(() => new Set(weekDays.map((d) => d.iso)), [weekDays]);
-
   const refresh = useCallback(() => {
     setSlots(loadCalendarSlots());
-    setMonthTick(Date.now());
   }, []);
 
   useEffect(() => {
@@ -105,12 +63,8 @@ export default function ReceptionBookingsPage() {
     };
   }, [refresh]);
 
-  useEffect(() => {
-    setWeekDayFilter(defaultWeekDayFilter(weekDays));
-  }, [weekDays[0]?.iso]);
-
   const bookings = useMemo(() => {
-    let list = getAwaitingBookings(slots).filter((b) => bookingInCurrentMonth(b, referenceDate));
+    let list = getAwaitingBookings(slots).filter((b) => b.date === selectedDate);
 
     if (sourceFilter === "app") {
       list = list.filter(isAppBooking);
@@ -118,14 +72,8 @@ export default function ReceptionBookingsPage() {
       list = list.filter(isManualBooking);
     }
 
-    if (weekDayFilter === "all") {
-      list = list.filter((b) => weekIsoSet.has(b.date));
-    } else {
-      list = list.filter((b) => b.date === weekDayFilter);
-    }
-
     return list;
-  }, [slots, referenceDate, sourceFilter, weekDayFilter, weekIsoSet]);
+  }, [slots, selectedDate, sourceFilter]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -145,7 +93,7 @@ export default function ReceptionBookingsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sourceFilter, weekDayFilter]);
+  }, [search, sourceFilter, selectedDate]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -191,7 +139,7 @@ export default function ReceptionBookingsPage() {
           <div>
             <h2 className="text-sm font-extrabold text-gray-900 dark:text-white">الحجوزات</h2>
             <p className="mt-0.5 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-              {monthLabel} — بانتظار تسجيل الحضور
+              {formatCalendarDate(selectedDate)} — بانتظار تسجيل الحضور
             </p>
           </div>
           <span className="rounded-full bg-[#6B5478]/12 px-2.5 py-0.5 text-[11px] font-bold text-[#6B5478]">
@@ -199,46 +147,26 @@ export default function ReceptionBookingsPage() {
           </span>
         </div>
 
-        <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-3 dark:border-gray-800 xl:flex-row xl:items-center">
+        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-5 py-3 dark:border-gray-800">
           <SearchBar
-            containerClassName="min-w-[220px] flex-1 max-w-md"
+            containerClassName="min-w-[180px] flex-1 max-w-md"
             value={search}
             onChange={setSearch}
             placeholder="بحث برقم الحجز أو الاسم أو الهاتف..."
           />
 
-          <Select
-            value={sourceFilter}
-            onValueChange={setSourceFilter}
-            options={BOOKING_SOURCE_FILTERS}
-            className="w-full shrink-0 sm:w-44"
+          <ReceptionBookingsDateNav
+            inline
+            value={selectedDate}
+            onChange={setSelectedDate}
+            className="shrink-0"
           />
 
-          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
-            <WeekDayCircle
-              active={weekDayFilter === "all"}
-              onClick={() => setWeekDayFilter("all")}
-              label="الكل"
-              subLabel="أسبوع"
-              title="عرض كل أيام هذا الأسبوع"
-            />
-            {weekDays.map((day) => {
-              const inCurrentMonth =
-                day.month === referenceDate.getMonth() + 1 && day.year === referenceDate.getFullYear();
-              return (
-                <WeekDayCircle
-                  key={day.iso}
-                  active={weekDayFilter === day.iso}
-                  disabled={!inCurrentMonth}
-                  onClick={() => setWeekDayFilter(day.iso)}
-                  label={day.weekdayLong}
-                  subLabel={String(day.dayNum)}
-                  title={`${day.weekdayLong} — ${day.dayNum}/${day.month}`}
-                  ringToday={day.isToday}
-                />
-              );
-            })}
-          </div>
+          <ReceptionBookingsSourceFilter
+            value={sourceFilter}
+            onChange={setSourceFilter}
+            className="shrink-0"
+          />
         </div>
 
         <div className="overflow-x-auto">
@@ -263,7 +191,7 @@ export default function ReceptionBookingsPage() {
               {paged.length === 0 ? (
                 <tr>
                   <td colSpan={12} className="px-3 py-10 text-center text-gray-400">
-                    لا توجد حجوزات مطابقة للبحث أو الفلتر المحدد.
+                    لا توجد حجوزات في هذا اليوم.
                   </td>
                 </tr>
               ) : (

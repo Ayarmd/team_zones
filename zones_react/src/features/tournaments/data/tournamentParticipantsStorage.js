@@ -22,7 +22,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 1,
     fullName: "أحمد المنصوري",
-    email: "ahmed.m@email.com",
+    email: "ahmed.m@gmail.com",
     phone: "0912345678",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -33,7 +33,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 2,
     fullName: "محمد العريفي",
-    email: "mohamed.a@email.com",
+    email: "mohamed.a@gmail.com",
     phone: "0923456789",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -44,7 +44,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 3,
     fullName: "خالد الزاوي",
-    email: "khaled.z@email.com",
+    email: "khaled.z@gmail.com",
     phone: "0934567890",
     tournamentId: 2,
     tournamentName: "بطولة تحدي الأبطال",
@@ -55,7 +55,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 4,
     fullName: "عمر بن حسين",
-    email: "omar.h@email.com",
+    email: "omar.h@gmail.com",
     phone: "0945678901",
     tournamentId: 2,
     tournamentName: "بطولة تحدي الأبطال",
@@ -66,7 +66,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 5,
     fullName: "يوسف القاضي",
-    email: "youssef.q@email.com",
+    email: "youssef.q@gmail.com",
     phone: "0956789012",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -77,7 +77,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 6,
     fullName: "سالم بوزريبة",
-    email: "salem.b@email.com",
+    email: "salem.b@gmail.com",
     phone: "0967890123",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -88,7 +88,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 7,
     fullName: "طارق المصراتي",
-    email: "tariq.m@email.com",
+    email: "tariq.m@gmail.com",
     phone: "0978901234",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -99,7 +99,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 8,
     fullName: "إبراهيم الشريف",
-    email: "ibrahim.s@email.com",
+    email: "ibrahim.s@gmail.com",
     phone: "0989012345",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -110,7 +110,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 9,
     fullName: "حسام الفيتوري",
-    email: "hussam.f@email.com",
+    email: "hussam.f@gmail.com",
     phone: "0990123456",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -121,7 +121,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 10,
     fullName: "نادر الجهاني",
-    email: "nader.j@email.com",
+    email: "nader.j@gmail.com",
     phone: "0911223344",
     tournamentId: 1,
     tournamentName: "بطولة فيفا الرمضانية",
@@ -132,7 +132,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 11,
     fullName: "فهد العكاري",
-    email: "fahd.a@email.com",
+    email: "fahd.a@gmail.com",
     phone: "0912334455",
     tournamentId: 2,
     tournamentName: "بطولة تحدي الأبطال",
@@ -143,7 +143,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 12,
     fullName: "مازن الشريف",
-    email: "mazen.s@email.com",
+    email: "mazen.s@gmail.com",
     phone: "0923445566",
     tournamentId: 2,
     tournamentName: "بطولة تحدي الأبطال",
@@ -154,7 +154,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 13,
     fullName: "رامي بوخزام",
-    email: "rami.b@email.com",
+    email: "rami.b@gmail.com",
     phone: "0934556677",
     tournamentId: 3,
     tournamentName: "كأس عالم 26",
@@ -165,7 +165,7 @@ const DEFAULT_PARTICIPANTS = [
   {
     id: 14,
     fullName: "وليد المنفي",
-    email: "walid.m@email.com",
+    email: "walid.m@gmail.com",
     phone: "0945667788",
     tournamentId: 3,
     tournamentName: "كأس عالم 26",

@@ -1,10 +1,24 @@
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
+
 const INVITES_KEY = "zones-employee-invites";
+
+function inviteEmail(email) {
+  return normalizeGmailEmail(String(email || "").trim().toLowerCase());
+}
 
 function loadInvites() {
   try {
     const raw = localStorage.getItem(INVITES_KEY);
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    let changed = false;
+    const next = parsed.map((row) => {
+      const email = inviteEmail(row.email);
+      if (email !== row.email) changed = true;
+      return { ...row, email };
+    });
+    if (changed) saveInvites(next);
+    return next;
   } catch {
     return [];
   }
@@ -26,7 +40,7 @@ function makeToken() {
 }
 
 export function createEmployeeInvite(email) {
-  const normalized = String(email || "").trim().toLowerCase();
+  const normalized = inviteEmail(email);
   const invites = loadInvites();
   const token = makeToken();
   const invite = {

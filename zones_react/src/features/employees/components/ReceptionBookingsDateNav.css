@@ -1,0 +1,310 @@
+.rb-date-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rb-date-nav-bar {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+  gap: 0.1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(229, 231, 235, 0.7);
+  background: #f9fafb;
+  padding: 0 0.2rem;
+}
+
+[data-theme="dark"] .rb-date-nav-bar {
+  border-color: rgba(55, 65, 81, 0.7);
+  background: #1f2937;
+}
+
+.rb-date-nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #6b5478;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.rb-date-nav-arrow:hover {
+  background: rgba(107, 84, 120, 0.1);
+}
+
+[data-theme="dark"] .rb-date-nav-arrow {
+  color: #d4c4de;
+}
+
+.rb-date-nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  padding: 0 0.55rem;
+  min-width: 6rem;
+  height: 100%;
+  cursor: pointer;
+  border-radius: 0.45rem;
+  transition: background 0.15s ease;
+}
+
+.rb-date-nav-trigger:hover {
+  background: rgba(107, 84, 120, 0.08);
+}
+
+.rb-date-nav-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .rb-date-nav-label {
+  color: #f9fafb;
+}
+
+.rb-date-nav-today {
+  font-size: 9px;
+  font-weight: 800;
+  color: #6b5478;
+  white-space: nowrap;
+}
+
+.rb-date-nav-back-today {
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b5478;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rb-date-nav-back-today:hover {
+  opacity: 0.85;
+}
+
+.rb-date-cal {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 50%;
+  z-index: 50;
+  width: 17.5rem;
+  transform: translateX(-50%);
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 0.75rem;
+  box-shadow: 0 12px 40px rgba(17, 24, 39, 0.12);
+}
+
+[data-theme="dark"] .rb-date-cal {
+  border-color: rgba(107, 84, 120, 0.4);
+  background: #151921;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.rb-date-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.rb-date-cal-month {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #111827;
+}
+
+[data-theme="dark"] .rb-date-cal-month {
+  color: #f9fafb;
+}
+
+.rb-date-cal-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.rb-date-cal-nav:hover {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] .rb-date-cal-nav {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .rb-date-cal-nav:hover {
+  background: rgba(107, 84, 120, 0.2);
+}
+
+.rb-date-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.rb-date-cal-weekdays span {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #9ca3af;
+}
+
+.rb-date-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.1rem;
+}
+
+.rb-date-cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.85rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+[data-theme="dark"] .rb-date-cal-day {
+  color: #f3f4f6;
+}
+
+.rb-date-cal-day:hover {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] .rb-date-cal-day:hover {
+  background: rgba(107, 84, 120, 0.2);
+}
+
+.rb-date-cal-day--outside {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .rb-date-cal-day--outside {
+  color: #6b7280;
+}
+
+.rb-date-cal-day--today:not(.rb-date-cal-day--selected) {
+  font-weight: 800;
+  color: #6b5478;
+}
+
+.rb-date-cal-day--selected {
+  background: #111827;
+  color: #fff;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .rb-date-cal-day--selected {
+  background: #6b5478;
+  color: #fff;
+}
+
+.rb-date-nav--inline {
+  align-items: stretch;
+}
+
+.rb-date-nav--inline .rb-date-nav-trigger {
+  min-width: 3.25rem;
+  justify-content: center;
+}
+
+.rb-source-filter-bar {
+  background: #fff;
+}
+
+[data-theme="dark"] .rb-source-filter-bar {
+  background: #1f2937;
+}
+
+.rb-source-filter-trigger {
+  padding-inline: 0.35rem;
+}
+
+.rb-source-filter-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
+  z-index: 50;
+  margin: 0;
+  list-style: none;
+  padding: 0.25rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(17, 24, 39, 0.12);
+}
+
+[data-theme="dark"] .rb-source-filter-menu {
+  border-color: rgba(55, 65, 81, 0.7);
+  background: #1f2937;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.rb-source-filter-option {
+  display: flex;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.75rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  text-align: start;
+  transition: background 0.12s ease;
+}
+
+[data-theme="dark"] .rb-source-filter-option {
+  color: #f3f4f6;
+}
+
+.rb-source-filter-option:hover {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] .rb-source-filter-option:hover {
+  background: rgba(107, 84, 120, 0.2);
+}
+
+.rb-source-filter-option--active {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+[data-theme="dark"] .rb-source-filter-option--active {
+  background: rgba(107, 84, 120, 0.25);
+  color: #fff;
+}

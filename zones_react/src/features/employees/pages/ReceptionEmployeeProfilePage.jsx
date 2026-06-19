@@ -23,7 +23,7 @@ import {
   getAuthSession,
   updateUserProfile,
 } from "../../auth/data/mockUsersStorage";
-import { useAccountUser } from "../../../shared/hooks/useAccountUser";
+import { useRequireAccountUser } from "../../../shared/hooks/useAccountUser";
 import {
   formatDateAr,
   formatDateTimeAr,
@@ -38,7 +38,7 @@ import { IconField } from "../../../components/ui/icon-field";
 
 export default function ReceptionEmployeeProfilePage() {
   const navigate = useNavigate();
-  const user = useAccountUser();
+  const user = useRequireAccountUser();
   const { hallName } = getReceptionProfileBundle();
   const employee = getLinkedReceptionEmployeeRecord(user);
   const fileRef = useRef(null);
@@ -124,13 +124,7 @@ export default function ReceptionEmployeeProfilePage() {
     navigate("/auth/login", { replace: true, state: { message: "تم حذف حسابك." } });
   };
 
-  if (!user) {
-    return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-xs text-gray-500 dark:border-gray-800 dark:bg-gray-900">
-        تعذر تحميل بيانات الحساب. سجّل الدخول مرة أخرى.
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
     <div>

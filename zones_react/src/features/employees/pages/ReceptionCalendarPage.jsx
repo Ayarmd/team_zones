@@ -96,7 +96,7 @@ export default function ReceptionCalendarPage() {
     setBookTarget(null);
     refresh();
     zonesToastSuccess(
-      `رقم الحجز ${payload.bookingCode} — يظهر في جدول الحجوزات والتقويم.`,
+      `رقم الحجز ${payload.bookingCode} — انتقل إلى صفحة الجلسات لبدء اللعب.`,
       "تم الحجز",
     );
   };

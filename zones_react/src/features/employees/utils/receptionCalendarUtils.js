@@ -16,8 +16,8 @@ export const CELL_KIND = {
 
 export const CELL_META = {
   maintenance: { label: "صيانة", hint: "الجهاز تحت الصيانة — مرتبط ببيانات المدير", className: "rcal-cell--maintenance" },
-  reserved: { label: "محجوز", hint: "حجز زائر — اضغط لبدء الجلسة", className: "rcal-cell--reserved" },
-  available: { label: "متاح", hint: "متاح للحجز — اضغط لحجز زائر", className: "rcal-cell--available" },
+  reserved: { label: "محجوز", hint: "حجز زبون — اضغط لعرض التفاصيل", className: "rcal-cell--reserved" },
+  available: { label: "متاح", hint: "متاح للحجز — اضغط لحجز زبون", className: "rcal-cell--available" },
   active: { label: "نشط", hint: "جلسة نشطة — للعرض فقط", className: "rcal-cell--active" },
 };
 

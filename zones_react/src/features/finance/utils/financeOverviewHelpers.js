@@ -1,10 +1,17 @@
-import { MONTHS_AR, buildExpenseSeries, buildRevenueSeries, deriveExpenseTotals, deriveRevenueTotals, formatCurrency, mix } from "./financeData";
+import {
+  buildExpenseSeries,
+  buildRevenueSeries,
+  deriveExpenseTotals,
+  deriveProfitHighlights,
+  deriveRevenueTotals,
+  formatCurrency,
+} from "./financeData";
 
 export function daysInMonth(y, m) {
   return new Date(y, m, 0).getDate();
 }
 
-/** دمج الإيرادات (محاكاة) مع المصروفات من سجل المصروفات */
+/** دمج الإيرادات من جلسات الاستقبال مع المصروفات المسجلة */
 export function buildOverviewChartSeries(year, month, granularity) {
   const revenueSeries = buildRevenueSeries(year, month, granularity);
   const expenseSeries = buildExpenseSeries(year, month, granularity);
@@ -40,29 +47,22 @@ export function deriveOverviewTotals(year, month) {
   };
 }
 
-export function deriveOverviewInsights(year, month, series, granularity) {
-  const seed = year * 300 + month * 13 + (granularity === "monthly" ? 99 : 0);
-  const devices = [
-    { name: "PS5 — منطقة VIP", hours: 138 + mix(seed) * 42 },
-    { name: "PC Gaming — الصف أ", hours: 124 + mix(seed + 1) * 38 },
-    { name: "Xbox Series X — ركن أ", hours: 112 + mix(seed + 2) * 36 },
-  ];
-  const top = devices[Math.floor(mix(seed + 4) * devices.length)];
+export function deriveOverviewInsights(year, month, series) {
+  const highlights = deriveProfitHighlights(year, month);
   let best = series[0];
   let worst = series[0];
   for (const p of series) {
-    if (p.netProfit > best.netProfit) best = p;
-    if (p.netProfit < worst.netProfit) worst = p;
+    if (!best || p.netProfit > best.netProfit) best = p;
+    if (!worst || p.netProfit < worst.netProfit) worst = p;
   }
-  const dailyAvg = 42 + mix(seed + 8) * 28;
   return {
-    topDevice: top.name,
-    topHours: Math.round(top.hours),
-    bestLabel: best.label,
-    bestProfit: best.netProfit,
-    worstLabel: worst.label,
-    worstProfit: worst.netProfit,
-    dailyBookings: Math.round(dailyAvg * 10) / 10,
+    topDevice: highlights.topDevice,
+    topDeviceProfit: highlights.topDeviceProfit,
+    bestLabel: best?.label ?? "—",
+    bestProfit: best?.netProfit ?? 0,
+    worstLabel: worst?.label ?? "—",
+    worstProfit: worst?.netProfit ?? 0,
+    dailyBookings: highlights.dailyBookings,
   };
 }
 

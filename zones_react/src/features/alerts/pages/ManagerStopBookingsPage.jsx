@@ -107,7 +107,7 @@ export default function ManagerStopBookingsPage() {
             <div>
               <h2 className="text-sm font-extrabold text-gray-900 dark:text-white">سجل إيقاف الحجوزات</h2>
               <p className="mt-0.5 text-[11px] text-gray-500">
-                {stopped ? "الحجوزات متوقفة حالياً — لا يمكن للاستقبال حجز زائر." : "الحجوزات متاحة للحجز."}
+                {stopped ? "الحجوزات متوقفة حالياً — لا يمكن للاستقبال حجز زبون." : "الحجوزات متاحة للحجز."}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

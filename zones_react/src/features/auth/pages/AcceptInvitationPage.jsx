@@ -37,7 +37,7 @@ export default function AcceptInvitationPage() {
       return;
     }
     if (!password || password.length < 4) {
-      setError("أدخل رمزاً سرياً (4 أحرف على الأقل).");
+      setError("أدخل كلمة مرور (4 أحرف على الأقل).");
       return;
     }
 
@@ -79,7 +79,7 @@ export default function AcceptInvitationPage() {
       replace: true,
       state: {
         registeredEmail: invite.email,
-        message: "تم إنشاء حسابك. سجّل الدخول بالبريد والرمز الذي اخترته.",
+        message: "تم إنشاء حسابك. سجّل الدخول بالبريد وكلمة المرور التي اخترتها.",
       },
     });
   };
@@ -133,14 +133,14 @@ export default function AcceptInvitationPage() {
           />
         </div>
 
-        <label>الرمز السري</label>
+        <label>كلمة المرور</label>
         <div className="field">
           <Lock size={18} />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="اختر رمزاً للدخول"
+            placeholder="اختر كلمة مرور للدخول"
             minLength={4}
             required
           />

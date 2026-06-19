@@ -27,6 +27,8 @@ import {
   overviewChartPalette,
   overviewTooltipBox,
 } from "../utils/financeOverviewHelpers";
+import { BOOKING_REVENUE_EVENT } from "../../employees/data/bookingRevenueStorage";
+import { RECEPTION_CALENDAR_EVENT } from "../../employees/data/receptionCalendarStorage";
 import { EXPENSES_STORAGE_EVENT } from "../data/expensesStorage";
 import "../pages/FinancialManagementPage.css";
 
@@ -65,7 +67,15 @@ export default function FinanceAnalysisHub({ onSelectView, onOpenReports }) {
   useEffect(() => {
     const sync = () => setRefreshKey((k) => k + 1);
     window.addEventListener(EXPENSES_STORAGE_EVENT, sync);
-    return () => window.removeEventListener(EXPENSES_STORAGE_EVENT, sync);
+    window.addEventListener(BOOKING_REVENUE_EVENT, sync);
+    window.addEventListener(RECEPTION_CALENDAR_EVENT, sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener(EXPENSES_STORAGE_EVENT, sync);
+      window.removeEventListener(BOOKING_REVENUE_EVENT, sync);
+      window.removeEventListener(RECEPTION_CALENDAR_EVENT, sync);
+      window.removeEventListener("focus", sync);
+    };
   }, []);
 
   const chartSeries = useMemo(
@@ -74,8 +84,8 @@ export default function FinanceAnalysisHub({ onSelectView, onOpenReports }) {
   );
   const totals = useMemo(() => deriveOverviewTotals(year, month), [year, month, refreshKey]);
   const insights = useMemo(
-    () => deriveOverviewInsights(year, month, chartSeries, granularity),
-    [year, month, chartSeries, granularity, refreshKey],
+    () => deriveOverviewInsights(year, month, chartSeries),
+    [year, month, chartSeries, refreshKey],
   );
   const yearsOptions = useMemo(() => yearOptions(), []);
   const chartPalette = useMemo(() => overviewChartPalette(isChartLight), [isChartLight]);
@@ -237,7 +247,7 @@ export default function FinanceAnalysisHub({ onSelectView, onOpenReports }) {
           <div className="finance-mini__row">
             <div>
               <div className="finance-mini__value">{insights.topDevice}</div>
-              <div className="finance-mini__sub">{insights.topHours} ساعة</div>
+              <div className="finance-mini__sub">{formatCurrency(insights.topDeviceProfit)}</div>
             </div>
             <span className="finance-mini__icon" aria-hidden>
               <Gamepad2 size={22} strokeWidth={2} />

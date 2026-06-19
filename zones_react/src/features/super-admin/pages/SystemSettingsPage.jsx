@@ -281,7 +281,7 @@ export default function SystemSettingsPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>حد الدفع بالنقاط (إجمالي مطلوب)</label>
+                <label className={labelClass}>الحد الأدنى لاستخدام النقاط (Threshold)</label>
                 <Input
                   type="number"
                   min={1}
@@ -295,7 +295,8 @@ export default function SystemSettingsPage() {
                 />
               </div>
               <p className="text-[10px] font-semibold leading-relaxed text-gray-500 dark:text-gray-400">
-                يُضاف الرصيد عند إنهاء الجلسة (كاش/مدفوع). الدفع بالنقاط يخصم الرصيد بالكامل ولا يُكتسب عنها نقاط.
+                يُكتسب الرصيد عند إنهاء الجلسة (كاش/مدفوع). عند الدفع بالنقاط يُخصم الحد الأدنى فقط ويبقى
+                الفرق في حساب الزبون. لا تُكتسب نقاط عن جلسة مدفوعة بالنقاط.
               </p>
             </div>
           </Card>

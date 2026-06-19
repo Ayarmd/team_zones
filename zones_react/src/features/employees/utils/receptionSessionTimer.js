@@ -1,14 +1,21 @@
 const HOUR_MS = 60 * 60 * 1000;
 
-/** نهاية الجلسة = ساعة الحجز + ساعة واحدة */
-export function getSlotSessionEndTime(dateIso, hourStr) {
-  const [h, m = 0] = hourStr.split(":").map(Number);
-  const end = new Date(`${dateIso}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
-  return new Date(end.getTime() + HOUR_MS);
+function parseHourOnDate(dateIso, hourStr) {
+  const [h, m = 0] = String(hourStr || "0:0").split(":").map(Number);
+  return new Date(`${dateIso}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
 }
 
-export function getSessionRemainingMs(dateIso, hourStr, now = Date.now()) {
-  const end = getSlotSessionEndTime(dateIso, hourStr);
+/** نهاية الجلسة = ساعة «إلى» من الحجز، أو ساعة البداية + ساعة واحدة */
+export function getSlotSessionEndTime(dateIso, hourStr, hourToStr) {
+  if (hourToStr && hourToStr !== "—" && hourToStr !== hourStr) {
+    return parseHourOnDate(dateIso, hourToStr);
+  }
+  const start = parseHourOnDate(dateIso, hourStr);
+  return new Date(start.getTime() + HOUR_MS);
+}
+
+export function getSessionRemainingMs(dateIso, hourStr, hourToStr, now = Date.now()) {
+  const end = getSlotSessionEndTime(dateIso, hourStr, hourToStr);
   return Math.max(0, end.getTime() - now);
 }
 

@@ -89,7 +89,7 @@ export default function AddEmployeeModal({ open, onClose, onOpenAdmin }) {
                 id="invite-email"
                 type="email"
                 dir="ltr"
-                placeholder="employee@example.com"
+                placeholder="employee@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

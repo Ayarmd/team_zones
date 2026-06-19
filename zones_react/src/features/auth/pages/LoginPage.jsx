@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import AuthLayout from "../../../shared/layouts/AuthLayout";
 import { attemptLogin, LOGIN_BLOCK_MESSAGES } from "../data/accountAccess";
 import { clearAuthSession, getLoginRedirectPath, setAuthSession } from "../data/mockUsersStorage";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 import {
   clearSuperAdminSession,
   setSuperAdminSession,
@@ -54,7 +55,7 @@ export default function LoginPage() {
     setError("");
     setInfo("");
 
-    const result = attemptLogin(email, password);
+    const result = attemptLogin(normalizeGmailEmail(email), password);
     if (!result.ok) {
       setError(LOGIN_BLOCK_MESSAGES[result.code] || LOGIN_BLOCK_MESSAGES.invalid);
       return;
@@ -93,7 +94,7 @@ export default function LoginPage() {
             id="login-email"
             type="email"
             dir="ltr"
-            placeholder="example@email.com"
+            placeholder="example@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="h-11 bg-gray-50 dark:bg-gray-800/80"

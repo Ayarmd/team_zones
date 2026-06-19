@@ -66,7 +66,7 @@ export default function SendEmployeeInviteModal({
             type="email"
             dir="ltr"
             className={inputCls}
-            placeholder="employee@example.com"
+            placeholder="employee@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

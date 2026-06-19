@@ -7,7 +7,7 @@ export default function OtpVerificationPage() {
   return (
     <AuthLayout
       title="تحقق من بريد إلكتروني"
-      subtitle="لقد أرسلنا رمز تحقق من 6 أرقام إلى admin@zones.com"
+      subtitle="لقد أرسلنا رمز تحقق من 6 أرقام إلى admin@gmail.com"
     >
       <div className="otp-row">
         {Array.from({ length: 6 }).map((_, idx) => (

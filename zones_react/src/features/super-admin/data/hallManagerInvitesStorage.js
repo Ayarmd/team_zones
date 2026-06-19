@@ -1,12 +1,26 @@
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
+
 const STORAGE_KEY = "zones-hall-manager-invites-v1";
 const INVITE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function inviteEmail(email) {
+  return normalizeGmailEmail(String(email || "").trim().toLowerCase());
+}
 
 function loadInvites() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    let changed = false;
+    const next = parsed.map((row) => {
+      const email = inviteEmail(row.email);
+      if (email !== row.email) changed = true;
+      return { ...row, email };
+    });
+    if (changed) saveInvites(next);
+    return next;
   } catch {
     return [];
   }
@@ -42,7 +56,7 @@ export function createHallManagerInvite({
     token,
     requestId,
     hallId,
-    email: String(email).trim().toLowerCase(),
+    email: inviteEmail(email),
     managerName,
     hallName,
     commissionRate: commissionRate ?? null,

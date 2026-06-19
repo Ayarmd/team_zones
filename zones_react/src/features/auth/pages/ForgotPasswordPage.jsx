@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
         <label>البريد الإلكتروني</label>
         <div className="field">
           <Mail size={18} />
-          <input type="email" placeholder="admin@zones.com" />
+          <input type="email" placeholder="admin@gmail.com" />
         </div>
         <button className="primary-btn" onClick={() => navigate("/auth/otp")} type="submit">
           إرسال رمز التحقق

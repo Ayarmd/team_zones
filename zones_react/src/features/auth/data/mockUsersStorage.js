@@ -1,5 +1,6 @@
 import { normalizeRole } from "../../employees/data/employeeMeta";
 import { loadEmployees, saveEmployees } from "../../employees/data/employeesStorage";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 
 const USERS_KEY = "zones-mock-users";
 const SESSION_KEY = "zones-auth-session";
@@ -11,13 +12,17 @@ export const AUTH_SESSION_EVENT = "zones-auth-session-updated";
 const LEGACY_MANAGER_ROLES = new Set(["admin", "supervisor"]);
 const LEGACY_MAINTENANCE_ROLES = new Set(["technician"]);
 
+function authEmail(email) {
+  return normalizeGmailEmail(String(email || "").trim().toLowerCase());
+}
+
 const DEFAULT_MANAGER_AVATAR =
   "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=face";
 
 const DEFAULT_USERS = [
   {
     id: 1,
-    email: "manager@zones.ly",
+    email: "manager@gmail.com",
     password: "admin123",
     role: "manager",
     fullName: "أحمد المدير",
@@ -33,7 +38,7 @@ const DEFAULT_USERS = [
   },
   {
     id: 2,
-    email: "khaled@zones.ly",
+    email: "khaled@gmail.com",
     password: "1234",
     role: "maintenance",
     fullName: "خالد بوزريدة",
@@ -49,7 +54,7 @@ const DEFAULT_USERS = [
   },
   {
     id: 3,
-    email: "ahmed@zones.ly",
+    email: "ahmed@gmail.com",
     password: "1234",
     role: "reception",
     fullName: "أحمد العقيبي",
@@ -68,6 +73,7 @@ const DEFAULT_USERS = [
 function normalizeUser(row) {
   return {
     ...row,
+    email: normalizeGmailEmail(row.email),
     phone: row.phone || "",
     avatar: row.avatar || "",
     residence: row.residence || "",
@@ -85,7 +91,15 @@ function loadUsersRaw() {
     const raw = localStorage.getItem(USERS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeUser) : null;
+    if (!Array.isArray(parsed)) return null;
+    let emailChanged = false;
+    const next = parsed.map((row) => {
+      const normalized = normalizeUser(row);
+      if (normalizeGmailEmail(row.email) !== row.email) emailChanged = true;
+      return normalized;
+    });
+    if (emailChanged) saveMockUsers(next);
+    return next;
   } catch {
     return null;
   }
@@ -195,9 +209,8 @@ export function nextUserId(list) {
 }
 
 export function findUserByEmail(email) {
-  const normalized = String(email || "")
-    .trim()
-    .toLowerCase();
+  const normalized = authEmail(email);
+  if (!normalized) return null;
   return loadMockUsers().find((u) => u.email === normalized) ?? null;
 }
 
@@ -216,7 +229,7 @@ export function authenticateUser(email, password) {
 /** مزامنة حالة التفعيل مع لوحة الأدمن */
 export function setMockUsersActiveByEmails(emails, active) {
   const targets = new Set(
-    (emails || []).map((e) => String(e || "").trim().toLowerCase()).filter(Boolean),
+    (emails || []).map((e) => authEmail(e)).filter(Boolean),
   );
   if (!targets.size) return;
 
@@ -235,7 +248,7 @@ export function setMockUsersActiveByEmails(emails, active) {
 
 export function clearAuthSessionForEmails(emails) {
   const targets = new Set(
-    (emails || []).map((e) => String(e || "").trim().toLowerCase()).filter(Boolean),
+    (emails || []).map((e) => authEmail(e)).filter(Boolean),
   );
   if (!targets.size) return;
 
@@ -243,7 +256,7 @@ export function clearAuthSessionForEmails(emails) {
     const raw = readSessionRaw();
     if (!raw) return;
     const session = JSON.parse(raw);
-    if (session?.email && targets.has(String(session.email).trim().toLowerCase())) {
+    if (session?.email && targets.has(authEmail(session.email))) {
       clearAuthSession();
     }
   } catch {
@@ -253,7 +266,8 @@ export function clearAuthSessionForEmails(emails) {
 
 export function registerManagerUser({ email, password, fullName, phone, hallId = null }) {
   const list = loadMockUsers();
-  const normalized = String(email).trim().toLowerCase();
+  const normalized = authEmail(email);
+  if (!normalized) return { ok: false, error: "البريد غير صالح." };
   if (list.some((u) => u.email === normalized)) {
     return { ok: false, error: "البريد مسجّل مسبقاً." };
   }
@@ -274,7 +288,8 @@ export function registerManagerUser({ email, password, fullName, phone, hallId =
 
 export function registerEmployeeUser({ email, password, fullName, role, employeeId }) {
   const list = loadMockUsers();
-  const normalized = String(email).trim().toLowerCase();
+  const normalized = authEmail(email);
+  if (!normalized) return { ok: false, error: "البريد غير صالح." };
   if (list.some((u) => u.email === normalized)) {
     return { ok: false, error: "البريد مسجّل مسبقاً." };
   }
@@ -298,9 +313,8 @@ export function updateUserProfile(userId, patch) {
   if (idx < 0) return { ok: false, error: "المستخدم غير موجود." };
 
   const current = list[idx];
-  const nextEmail = patch.email
-    ? String(patch.email).trim().toLowerCase()
-    : current.email;
+  const nextEmail = patch.email ? authEmail(patch.email) : current.email;
+  if (!nextEmail) return { ok: false, error: "البريد غير صالح." };
   if (list.some((u) => u.id !== userId && u.email === nextEmail)) {
     return { ok: false, error: "البريد مستخدم من حساب آخر." };
   }
@@ -338,7 +352,7 @@ export function verifyCurrentPassword(userId, currentPassword) {
   const user = getUserById(userId);
   if (!user) return { ok: false, error: "المستخدم غير موجود." };
   if (user.password !== currentPassword) {
-    return { ok: false, error: "الرمز الحالي غير صحيح." };
+    return { ok: false, error: "كلمة المرور الحالية غير صحيحة." };
   }
   return { ok: true };
 }
@@ -458,17 +472,30 @@ export function getAuthSession() {
     const raw = readSessionRaw();
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed?.id) return null;
+    if (!parsed?.id && !parsed?.email) return null;
 
-    const user = getUserById(parsed.id);
+    let user = parsed.id != null ? getUserById(parsed.id) : null;
+    if (!user && parsed.email) {
+      user = findUserByEmail(parsed.email);
+    }
     if (!user || user.active === false) {
       clearAuthSession();
       return null;
     }
 
+    if (parsed.id != user.id) {
+      setAuthSession(user);
+    }
+
     return {
       ...parsed,
-      role: normalizeSessionRole(parsed.role),
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: normalizeSessionRole(user.role),
+      employeeId: user.employeeId ?? null,
+      avatar: user.avatar || parsed.avatar || "",
+      phone: user.phone || parsed.phone || "",
     };
   } catch {
     return null;

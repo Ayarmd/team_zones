@@ -15,6 +15,7 @@ import {
 import { HALL_REQUEST_STATUS, normalizeHallRequestStatus } from "./hallRequestStatus";
 import { DEFAULT_ACTIVE_HALLS, resolveHallServices } from "./hallServicesData";
 import { registerManagerUser, setMockUsersActiveByEmails } from "../../auth/data/mockUsersStorage";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 
 const STORAGE_KEY = "zones-super-admin-data-v10";
 
@@ -390,8 +391,8 @@ const DEFAULT_STATE = {
     language: "ar",
     allowRegistrations: true,
     emailNotifications: true,
-    loyaltyPointsPerSession: 10,
-    loyaltyRedemptionThreshold: 100,
+    loyaltyPointsPerSession: 20,
+    loyaltyRedemptionThreshold: 120,
   },
 };
 
@@ -470,6 +471,33 @@ function migrateHallCatalog(state) {
   return state;
 }
 
+function migrateAuthEmails(state) {
+  let changed = false;
+
+  if (Array.isArray(state.pendingRequests)) {
+    state.pendingRequests = state.pendingRequests.map((row) => {
+      if (!row.managerEmail) return row;
+      const managerEmail = normalizeGmailEmail(row.managerEmail);
+      if (managerEmail === row.managerEmail) return row;
+      changed = true;
+      return { ...row, managerEmail };
+    });
+  }
+
+  for (const key of ["managers", "employees"]) {
+    if (!Array.isArray(state[key])) continue;
+    state[key] = state[key].map((row) => {
+      if (!row.email) return row;
+      const email = normalizeGmailEmail(row.email);
+      if (email === row.email) return row;
+      changed = true;
+      return { ...row, email };
+    });
+  }
+
+  return changed;
+}
+
 function loadRaw() {
   try {
     let raw = localStorage.getItem(STORAGE_KEY);
@@ -495,7 +523,10 @@ function loadRaw() {
     merged.pendingRequests = migrateHallRequests(merged.pendingRequests);
     migrateCommissionFields(merged);
     migrateHallCatalog(merged);
+    const emailsChanged = migrateAuthEmails(merged);
     if (!parsed?._hallCatalogV11 && merged._hallCatalogV11) {
+      save(merged);
+    } else if (emailsChanged) {
       save(merged);
     }
     return merged;
@@ -966,7 +997,7 @@ export function submitHallJoinRequest({
 }) {
   const trimmedName = String(hallName || "").trim();
   const trimmedAddress = String(address || "").trim();
-  const trimmedEmail = String(email || "").trim().toLowerCase();
+  const trimmedEmail = normalizeGmailEmail(String(email || "").trim().toLowerCase());
   const trimmedPhone = String(commercialPhone || "").trim();
   const trimmedMap = String(mapLink || "").trim();
 

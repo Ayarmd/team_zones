@@ -33,7 +33,7 @@ export default function CustomerHallServicesPage() {
           <div className="p-5">
             <p className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-[#6B5478]">
               <Building2 size={14} />
-              معاينة تطبيق الزبون
+              تطبيق الزبون
             </p>
             <h1 className="text-lg font-extrabold text-gray-900 dark:text-white">{hall.hallName}</h1>
             <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
@@ -53,7 +53,7 @@ export default function CustomerHallServicesPage() {
             <CustomerCommentsPreview />
 
             <p className="mt-4 text-center text-[10px] text-gray-400">
-              يُعرض للزبون فقط الخدمات التي is_available = true — الدوائر المطفأة مخفية.
+              تُعرض للزبون الخدمات والملحقات المفعّلة فقط.
             </p>
           </div>
         </div>

@@ -4,6 +4,15 @@ import {
   sumExpensesInMonth,
   sumExpensesInPrevMonth,
 } from "../data/expensesStorage";
+import {
+  buildBookingCategoryBreakdown,
+  buildBookingRevenueDailySeries,
+  buildBookingRevenueMonthlySeries,
+  buildBookingRevenueWeeklySeries,
+  countCompletedSessionsInMonth,
+  deriveBookingProfitHighlights,
+  sumRevenueInMonth,
+} from "../../employees/data/bookingRevenueStorage";
 
 export const MONTHS_AR = [
   "يناير",
@@ -58,44 +67,23 @@ export function yearOptions() {
   return [y0 - 1, y0, y0 + 1];
 }
 
-/** سلسلة إيرادات فقط حسب الفترة (يومي / أسبوعي / شهري) */
+function prevMonth(year, month) {
+  if (month === 1) return { year: year - 1, month: 12 };
+  return { year, month: month - 1 };
+}
+
+/** سلسلة إيرادات من جلسات الاستقبال المكتملة */
 export function buildRevenueSeries(year, month, granularity) {
-  const seed = year * 400 + month * 17 + (granularity === "daily" ? 3 : granularity === "weekly" ? 7 : 11);
-  const out = [];
-
-  if (granularity === "daily") {
-    const n = daysInMonth(year, month);
-    for (let d = 1; d <= n; d += 1) {
-      const t = seed + d * 1.7;
-      const wave = mix(t) * 0.55 + mix(t + 4) * 0.45;
-      const revenue = 3200 + wave * 4200 + mix(t + 2) * 1800;
-      out.push({ label: String(d), revenue });
-    }
-    return out;
-  }
-
-  if (granularity === "weekly") {
-    for (let w = 1; w <= 4; w += 1) {
-      const t = seed + w * 11;
-      const revenue = 18000 + mix(t) * 22000 + mix(t + 3) * 8000;
-      out.push({ label: `الأسبوع ${w}`, revenue });
-    }
-    return out;
-  }
-
-  for (let m = 0; m < 12; m += 1) {
-    const t = seed + m * 19 + year;
-    const revenue = 95000 + mix(t) * 72000 + mix(t + 6) * 40000;
-    out.push({ label: MONTHS_AR[m].slice(0, 3), revenue });
-  }
-  return out;
+  if (granularity === "daily") return buildBookingRevenueDailySeries(year, month);
+  if (granularity === "weekly") return buildBookingRevenueWeeklySeries(year, month);
+  return buildBookingRevenueMonthlySeries(year);
 }
 
 export function deriveRevenueTotals(year, month) {
-  const seed = year * 400 + month * 23;
-  const total = 128000 + mix(seed) * 92000 + mix(seed + 1) * 48000;
-  const prev = total / (1 + (mix(seed + 5) - 0.5) * 0.14);
-  const revDelta = ((total - prev) / prev) * 100;
+  const total = sumRevenueInMonth(year, month);
+  const prev = prevMonth(year, month);
+  const prevTotal = sumRevenueInMonth(prev.year, prev.month);
+  const revDelta = prevTotal > 0 ? ((total - prevTotal) / prevTotal) * 100 : total > 0 ? 100 : 0;
   return { total, revDelta };
 }
 
@@ -133,22 +121,10 @@ export function deriveRevenueInsights(series, granularity) {
   };
 }
 
-/** توزيع الإيرادات حسب الفئة (محاكاة من الحجوزات والمدفوعات) */
+/** توزيع الإيرادات حسب مصدر الحجز الفعلي */
 export function buildCategoryBreakdown(year, month) {
-  const seed = year * 500 + month * 31;
-  const raw = REVENUE_CATEGORIES.map((cat, i) => {
-    const t = seed + i * 13;
-    const weight = 0.15 + mix(t) * 0.35;
-    return { ...cat, value: weight };
-  });
-  const sum = raw.reduce((a, b) => a + b.value, 0);
   const totalRevenue = deriveRevenueTotals(year, month).total;
-  return raw.map((r) => ({
-    name: r.label,
-    key: r.key,
-    value: Math.round((r.value / sum) * totalRevenue),
-    color: r.color,
-  }));
+  return buildBookingCategoryBreakdown(year, month, totalRevenue);
 }
 
 /** سلسلة مصروفات حسب الفترة */
@@ -270,8 +246,9 @@ export function deriveNetProfitTotals(year, month) {
   const rev = deriveRevenueTotals(year, month);
   const exp = deriveExpenseTotals(year, month);
   const total = rev.total - exp.total;
-  const prevRev = rev.total / (1 + (mix(year * 400 + month * 23 + 5) - 0.5) * 0.14);
-  const prevExp = exp.total / (1 + (mix(year * 520 + month * 27 + 4) - 0.5) * 0.12);
+  const prev = prevMonth(year, month);
+  const prevRev = sumRevenueInMonth(prev.year, prev.month);
+  const prevExp = sumExpensesInPrevMonth(year, month).total;
   const prevNet = prevRev - prevExp;
   const netDelta = ((total - prevNet) / Math.abs(prevNet || 1)) * 100;
   return { total, netDelta };
@@ -335,29 +312,11 @@ export function buildProfitCategoryBreakdown(year, month) {
 }
 
 export function deriveProfitHighlights(year, month) {
-  const seed = year * 700 + month * 41;
-  const devices = [
-    { name: "PS5 — VIP", profit: 18200 + mix(seed) * 8400 },
-    { name: "PC Gaming — أ", profit: 16400 + mix(seed + 1) * 7200 },
-    { name: "Xbox Series X", profit: 14800 + mix(seed + 2) * 6800 },
-  ];
-  const topDevice = devices.reduce((a, b) => (b.profit > a.profit ? b : a), devices[0]);
-
-  const packages = [
-    { name: "باقة 3 ساعات", count: 186 + Math.round(mix(seed + 5) * 48) },
-    { name: "باقة يوم كامل", count: 142 + Math.round(mix(seed + 6) * 36) },
-    { name: "باقة أسبوعية", count: 98 + Math.round(mix(seed + 7) * 28) },
-  ];
-  const topPackage = packages.reduce((a, b) => (b.count > a.count ? b : a), packages[0]);
-
-  const dailyBookings = Math.round((42 + mix(seed + 9) * 28) * 10) / 10;
-
+  const highlights = deriveBookingProfitHighlights(year, month);
+  const sessions = countCompletedSessionsInMonth(year, month);
   return {
-    topDevice: topDevice.name,
-    topDeviceProfit: topDevice.profit,
-    topPackage: topPackage.name,
-    topPackageCount: topPackage.count,
-    dailyBookings,
+    ...highlights,
+    dailyBookings: sessions > 0 ? highlights.dailyBookings : 0,
   };
 }
 

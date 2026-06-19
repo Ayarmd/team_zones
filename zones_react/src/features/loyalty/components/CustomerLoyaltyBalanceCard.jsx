@@ -27,6 +27,7 @@ export default function CustomerLoyaltyBalanceCard() {
 
   const balance = customer?.pointsBalance ?? 0;
   const canPay = balance >= settings.redemptionThreshold;
+  const balanceAfterPay = canPay ? balance - settings.redemptionThreshold : null;
 
   return (
     <div className="mt-5 rounded-2xl border border-[#6B5478]/20 bg-gradient-to-br from-[#6B5478]/8 to-transparent p-4 dark:border-[#6B5478]/30 dark:from-[#6B5478]/15">
@@ -51,9 +52,14 @@ export default function CustomerLoyaltyBalanceCard() {
           {canPay ? "يمكن الدفع بالنقاط" : `تحتاج ${settings.redemptionThreshold} نقطة`}
         </span>
       </div>
+      {canPay ? (
+        <p className="mt-2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+          عند الدفع بالنقاط: يُخصم {settings.redemptionThreshold} نقطة فقط — يبقى رصيدك{" "}
+          {balanceAfterPay} نقطة
+        </p>
+      ) : null}
       <p className="mt-3 text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">
-        معاينة حساب الزبون ({customer?.name || DEMO_PHONE}). عند إتمام الجلسة يظهر إشعار: «لقد حصلت على{" "}
-        {settings.pointsPerSession} نقاط جديدة».
+        عند إتمام الجلسة يحصل الزبون على {settings.pointsPerSession} نقطة (الدفع نقداً أو مدفوعاً مسبقاً).
       </p>
     </div>
   );

@@ -20,17 +20,15 @@ import ConfirmModal from "../../super-admin/components/ui/ConfirmModal";
 import PageHeader from "../../super-admin/components/ui/PageHeader";
 import {
   deleteUserAccount,
-  getAuthSession,
   updateUserProfile,
 } from "../../auth/data/mockUsersStorage";
 import { saveManagerHall } from "../../lounge/data/managerHallStorage";
-import { useAccountUser } from "../../../shared/hooks/useAccountUser";
+import { useRequireAccountUser } from "../../../shared/hooks/useAccountUser";
 import { IconField } from "../../../components/ui/icon-field";
 
 export function ManagerProfilePage() {
   const navigate = useNavigate();
-  const session = getAuthSession();
-  const user = useAccountUser();
+  const user = useRequireAccountUser();
   const fileRef = useRef(null);
 
   const [fullName, setFullName] = useState("");
@@ -108,13 +106,7 @@ export function ManagerProfilePage() {
     navigate("/auth/login", { replace: true, state: { message: "تم حذف الحساب." } });
   };
 
-  if (!session || !user) {
-    return (
-      <ManagerLayout>
-        <p className="text-center text-gray-500">جاري التحميل...</p>
-      </ManagerLayout>
-    );
-  }
+  if (!user) return null;
 
   return (
     <ManagerLayout>

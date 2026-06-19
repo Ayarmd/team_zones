@@ -1,5 +1,6 @@
 import { loadManagerHall } from "../../lounge/data/managerHallStorage";
 import { normalizeRole, normalizeShift, normalizeStatus } from "./employeeMeta";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 
 const STORAGE_KEY = "zones-employees";
 
@@ -18,7 +19,7 @@ const DEFAULT_EMPLOYEES = [
     id: 1,
     fullName: "أحمد العقيبي",
     phone: "+218 91 234 5678",
-    email: "ahmed@zones.ly",
+    email: "ahmed@gmail.com",
     role: "reception",
     shift: "evening",
     status: "working",
@@ -46,7 +47,7 @@ const DEFAULT_EMPLOYEES = [
     id: 2,
     fullName: "محمد الفيتوري",
     phone: "+218 92 881 2044",
-    email: "m.faitouri@zones.ly",
+    email: "m.faitouri@gmail.com",
     role: "reception",
     shift: "morning",
     status: "working",
@@ -65,7 +66,7 @@ const DEFAULT_EMPLOYEES = [
     workInfoType: "full_time",
     photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
     lastLogin: "2026-06-08T08:15:00",
-    lastOperation: "تسجيل دخول عميل",
+    lastOperation: "تسجيل دخول زبون",
     operationsThisMonth: 98,
     isArchived: false,
     accountStatus: "active",
@@ -74,7 +75,7 @@ const DEFAULT_EMPLOYEES = [
     id: 3,
     fullName: "سارة المنصوري",
     phone: "+218 94 550 3311",
-    email: "sara.m@zones.ly",
+    email: "sara.m@gmail.com",
     role: "reception",
     shift: "evening",
     status: "working",
@@ -102,7 +103,7 @@ const DEFAULT_EMPLOYEES = [
     id: 4,
     fullName: "خالد بوزريدة",
     phone: "+218 91 770 9920",
-    email: "khaled@zones.ly",
+    email: "khaled@gmail.com",
     role: "maintenance",
     shift: "evening",
     status: "working",
@@ -129,7 +130,7 @@ const DEFAULT_EMPLOYEES = [
     id: 5,
     fullName: "يوسف الكيلاني",
     phone: "+218 92 440 1188",
-    email: "y.kilani@zones.ly",
+    email: "y.kilani@gmail.com",
     role: "maintenance",
     shift: "evening",
     status: "leave",
@@ -161,6 +162,7 @@ function normalizeEmployee(row) {
 
   return {
     ...row,
+    email: normalizeGmailEmail(row.email),
     role,
     shift: normalizeShift(row.shift),
     status: normalizeStatus(row.status),
@@ -189,7 +191,10 @@ export function loadEmployees() {
     if (!raw) return DEFAULT_EMPLOYEES.map(normalizeEmployee);
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || !parsed.length) return DEFAULT_EMPLOYEES.map(normalizeEmployee);
-    return parsed.map(normalizeEmployee);
+    const normalized = parsed.map(normalizeEmployee);
+    const emailChanged = parsed.some((row, i) => normalizeGmailEmail(row.email) !== row.email);
+    if (emailChanged) saveEmployees(normalized);
+    return normalized;
   } catch {
     return DEFAULT_EMPLOYEES.map(normalizeEmployee);
   }

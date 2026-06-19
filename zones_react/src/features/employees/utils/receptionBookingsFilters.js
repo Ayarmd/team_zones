@@ -52,6 +52,6 @@ export function isManualBooking(booking) {
 
 export const BOOKING_SOURCE_FILTERS = [
   { value: "all", label: "الكل" },
-  { value: "app", label: "تطبيق الزبون" },
-  { value: "manual", label: "حجز يدوي" },
+  { value: "app", label: "تطبيق" },
+  { value: "manual", label: "يدوي" },
 ];

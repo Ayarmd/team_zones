@@ -258,7 +258,7 @@ export default function HallServicesManagerPicker({ compact = false }) {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-        <p className="text-[10px] text-gray-400">is_available = true للخدمات والملحقات النشطة فقط.</p>
+        <p className="text-[10px] text-gray-400">الخدمات والملحقات المفعّلة فقط تظهر للزبون في التطبيق.</p>
         <button
           type="button"
           onClick={handleSave}

@@ -1,6 +1,7 @@
 import { findUserByEmail, getUserById } from "./mockUsersStorage";
 import { getSuperAdminState } from "../../super-admin/data/superAdminStorage";
 import { authenticateSuperAdmin } from "../../super-admin/data/superAdminAuth";
+import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 
 export const LOGIN_BLOCK_CODES = {
   INVALID: "invalid",
@@ -9,13 +10,13 @@ export const LOGIN_BLOCK_CODES = {
 };
 
 export const LOGIN_BLOCK_MESSAGES = {
-  [LOGIN_BLOCK_CODES.INVALID]: "البريد أو الرمز غير صحيح.",
+  [LOGIN_BLOCK_CODES.INVALID]: "البريد أو كلمة المرور غير صحيحة.",
   [LOGIN_BLOCK_CODES.MANAGER_DISABLED]: "عذراً، لقد تم تعطيل حسابك والصالة والموظفين.",
   [LOGIN_BLOCK_CODES.EMPLOYEE_DISABLED]: "تم تعطيل حسابك من قبل الأدمن.",
 };
 
 function normalizeEmail(email) {
-  return String(email || "").trim().toLowerCase();
+  return normalizeGmailEmail(String(email || "").trim().toLowerCase());
 }
 
 function findSuperAdminManagerByEmail(email) {
@@ -68,12 +69,13 @@ export function getAccountBlockCode(user) {
 }
 
 export function attemptLogin(email, password) {
-  const superAdmin = authenticateSuperAdmin(email, password);
+  const normalizedEmail = normalizeGmailEmail(email);
+  const superAdmin = authenticateSuperAdmin(normalizedEmail, password);
   if (superAdmin) {
     return { ok: true, accountType: "super_admin", user: superAdmin };
   }
 
-  const user = findUserByEmail(email);
+  const user = findUserByEmail(normalizedEmail);
   if (!user || user.password !== password) {
     return { ok: false, code: LOGIN_BLOCK_CODES.INVALID };
   }

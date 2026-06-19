@@ -4,6 +4,7 @@ export const RECEPTION_EMPLOYEE_ROUTES = {
   reservationsCalendar: "/employee/reception/reservations/calendar",
   reservationsBookings: "/employee/reception/reservations/bookings",
   reservationsSession: "/employee/reception/reservations/session",
+  reservationsBanned: "/employee/reception/reservations/banned",
   devices: "/employee/reception/devices",
   devicesBroken: "/employee/reception/devices/broken",
   packages: "/employee/reception/packages",

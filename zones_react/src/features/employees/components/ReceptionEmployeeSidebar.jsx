@@ -45,6 +45,7 @@ const RESERVATIONS_GROUP = {
     { label: "تقويم", path: RECEPTION_EMPLOYEE_ROUTES.reservationsCalendar },
     { label: "حجوزات", path: RECEPTION_EMPLOYEE_ROUTES.reservationsBookings },
     { label: "جلسة", path: RECEPTION_EMPLOYEE_ROUTES.reservationsSession },
+    { label: "محظور", path: RECEPTION_EMPLOYEE_ROUTES.reservationsBanned },
   ],
 };
 

@@ -37,7 +37,7 @@ const DEFAULT_HALL = {
   address: "حي الأندلس — شارع الجمهورية",
   mapLink: "https://maps.google.com/?q=32.8872,13.1913",
   phone: "091 234 5678",
-  email: "manager@zones.ly",
+  email: "manager@gmail.com",
   managerName: "أحمد المدير",
   employeeCount: 6,
   workHoursFrom: DEFAULT_WORK_HOURS_FROM,
