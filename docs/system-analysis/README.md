@@ -15,8 +15,29 @@
 |-------|---------|
 | [entities_analysis.md](./entities_analysis.md) | **تحديد كيانات النظام** — قائمة مرقمة وتصنيف الكيانات |
 | [entities_attributes.md](./entities_attributes.md) | **تحديد خصائص كيانات النظام** — مخططات Attributes لكل كيان |
+| [entity_attribute_diagrams.md](./entity_attribute_diagrams.md) | **رسم Chen Style** — خصائص كل كيان (مثل المثال الأكاديمي) |
+| [entity-attribute-diagrams.html](./entity-attribute-diagrams.html) | **معاينة مرئية** — 31 مخطط SVG |
 | [relationships_analysis.md](./relationships_analysis.md) | **تحديد العلاقات بين الكيانات** — One-to-One, One-to-Many, Many-to-Many |
 | [erd_documentation.md](./erd_documentation.md) | **مخطط ERD الكامل** — Mermaid + ASCII diagrams |
+| [zones-erd-report.html](./zones-erd-report.html) | **مخططات ERD مرئية** — تقرير HTML للمعاينة والطباعة |
+| [EXPORT_PDF.md](./EXPORT_PDF.md) | **تحويل إلى PDF** — `npm run pdf` |
+
+### تصدير PDF سريع
+
+```powershell
+cd docs\system-analysis
+npm run pdf
+```
+
+ينشئ: `zones-erd-diagrams.pdf`
+
+### مخططات خصائص الكيانات (Chen Style)
+
+```powershell
+npm run pdf:attributes
+```
+
+ينشئ: `zones-entity-attributes.pdf`
 
 ---
 

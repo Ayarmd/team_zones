@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZONES — مخططات خصائص الكيانات (Chen Style)</title>
+  <style>
+    :root {
+      --entity-fill: #2196f3;
+      --entity-stroke: #1976d2;
+      --attr-fill: #e3f2fd;
+      --attr-stroke: #90caf9;
+      --line: #64b5f6;
+      --ink: #263238;
+      --muted: #607d8b;
+      --page-bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: #eceff1;
+      color: var(--ink);
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid #cfd8dc;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #37474f;
+    }
+
+    .toolbar .hint { font-size: 0.85rem; color: var(--muted); }
+
+    .legend-inline {
+      display: flex;
+      gap: 16px;
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-inline span { display: flex; align-items: center; gap: 6px; }
+
+    .swatch-entity {
+      width: 18px; height: 12px;
+      background: var(--entity-fill);
+      border-radius: 3px;
+      border: 1px solid var(--entity-stroke);
+    }
+
+    .swatch-attr {
+      width: 22px; height: 14px;
+      background: var(--attr-fill);
+      border-radius: 50%;
+      border: 1px solid var(--attr-stroke);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .diagram-card {
+      background: var(--page-bg);
+      border: 1px solid #cfd8dc;
+      border-radius: 12px;
+      overflow: hidden;
+      page-break-inside: avoid;
+      box-shadow: 0 4px 16px rgba(38, 50, 56, 0.06);
+    }
+
+    .diagram-card header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eceff1;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .diagram-card header strong { font-size: 0.95rem; }
+    .diagram-card header small { color: var(--muted); font-size: 0.8rem; }
+
+    .diagram-card svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+    }
+
+    @media print {
+      .toolbar { display: none; }
+      body { background: #fff; }
+      .grid {
+        grid-template-columns: 1fr;
+        padding: 0;
+        gap: 0;
+      }
+      .diagram-card {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <div>
+      <h1>مخططات خصائص الكيانات — Chen Style</h1>
+      <div class="hint">منصة ZONES · مستخرج من Laravel Migrations</div>
+    </div>
+    <div class="legend-inline">
+      <span><i class="swatch-entity"></i> كيان (Entity)</span>
+      <span><i class="swatch-attr"></i> خاصية (Attribute)</span>
+      <span><u>id</u> = PK</span>
+      <span style="color:#2e7d32">* = FK</span>
+    </div>
+  </div>
+
+  <div class="grid" id="diagrams"></div>
+
+  <script src="entities-data.js"></script>
+  <script>
+    const ENTITIES = window.ENTITIES;
+
+    const ENTITY_FILL = "#2196F3";
+    const ENTITY_STROKE = "#1976D2";
+    const ATTR_FILL = "#E3F2FD";
+    const ATTR_STROKE = "#90CAF9";
+    const LINE_COLOR = "#64B5F6";
+    const TEXT = "#263238";
+
+    function measureText(text, fontSize = 11) {
+      const c = document.createElement("canvas").getContext("2d");
+      c.font = `${fontSize}px Segoe UI, Tahoma, Arial, sans-serif`;
+      return c.measureText(text).width;
+    }
+
+    function ellipseSize(label) {
+      const w = Math.max(56, measureText(label, 11) + 22);
+      return { rx: w / 2, ry: 14 };
+    }
+
+    function entityBoxSize(table) {
+      const w = Math.max(120, measureText(table, 13) + 36);
+      return { w, h: 36 };
+    }
+
+    function layoutAttributes(attrs, cx, cy) {
+      const n = attrs.length;
+      const useDualRing = n > 18;
+      const positions = [];
+
+      if (!useDualRing) {
+        const radius = Math.max(155, Math.min(280, 95 + n * 8));
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          positions.push({
+            x: cx + radius * Math.cos(angle),
+            y: cy + radius * Math.sin(angle),
+            attr: attrs[i],
+          });
+        }
+      } else {
+        const inner = attrs.slice(0, Math.ceil(n / 2));
+        const outer = attrs.slice(Math.ceil(n / 2));
+        const r1 = Math.max(130, 80 + inner.length * 7);
+        const r2 = Math.max(210, 140 + outer.length * 8);
+        inner.forEach((attr, i) => {
+          const angle = (i / inner.length) * Math.PI * 2 - Math.PI / 2;
+          positions.push({ x: cx + r1 * Math.cos(angle), y: cy + r1 * Math.sin(angle), attr });
+        });
+        outer.forEach((attr, i) => {
+          const angle = (i / outer.length) * Math.PI * 2 - Math.PI / 2 + Math.PI / outer.length;
+          positions.push({ x: cx + r2 * Math.cos(angle), y: cy + r2 * Math.sin(angle), attr });
+        });
+      }
+
+      return positions;
+    }
+
+    function svgSize(positions, box) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const pad = 24;
+      positions.forEach((p) => {
+        const { rx, ry } = ellipseSize(formatLabel(p.attr));
+        minX = Math.min(minX, p.x - rx);
+        maxX = Math.max(maxX, p.x + rx);
+        minY = Math.min(minY, p.y - ry);
+        maxY = Math.max(maxY, p.y + ry);
+      });
+      minX = Math.min(minX, positions[0] ? positions[0].x - box.w : 0);
+      maxX = Math.max(maxX, positions[0] ? positions[0].x + box.w : 400);
+      return {
+        width: Math.max(480, maxX - minX + pad * 2),
+        height: Math.max(420, maxY - minY + pad * 2),
+        offsetX: -minX + pad,
+        offsetY: -minY + pad,
+      };
+    }
+
+    function formatLabel(attr) {
+      if (attr.fk) return `${attr.name} *`;
+      return attr.name;
+    }
+
+    function renderDiagram(entity) {
+      const positions = layoutAttributes(entity.attributes, 0, 0);
+      const box = entityBoxSize(entity.table);
+      const size = svgSize(positions, box);
+      const cx = size.offsetX;
+      const cy = size.offsetY;
+
+      const adjusted = positions.map((p) => ({
+        x: p.x + size.offsetX,
+        y: p.y + size.offsetY,
+        attr: p.attr,
+      }));
+
+      const lineEls = adjusted.map((p) =>
+        `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="${LINE_COLOR}" stroke-width="1.5"/>`
+      ).join("");
+
+      const attrEls = adjusted.map((p) => {
+        const label = formatLabel(p.attr);
+        const { rx, ry } = ellipseSize(label);
+        const pk = p.attr.pk ? ' text-decoration="underline" font-weight="600"' : "";
+        const fkStyle = p.attr.fk ? ' fill="#1b5e20"' : ` fill="${TEXT}"`;
+        return `
+          <ellipse cx="${p.x}" cy="${p.y}" rx="${rx}" ry="${ry}" fill="${ATTR_FILL}" stroke="${ATTR_STROKE}" stroke-width="1.2"/>
+          <text x="${p.x}" y="${p.y + 4}" text-anchor="middle" font-family="Segoe UI, Tahoma, Arial, sans-serif" font-size="11"${fkStyle}${pk}>${label}</text>
+        `;
+      }).join("");
+
+      const bx = cx - box.w / 2;
+      const by = cy - box.h / 2;
+
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size.width} ${size.height}" width="${size.width}" height="${size.height}">
+          ${lineEls}
+          <rect x="${bx}" y="${by}" width="${box.w}" height="${box.h}" rx="6" ry="6" fill="${ENTITY_FILL}" stroke="${ENTITY_STROKE}" stroke-width="1.5"/>
+          <text x="${cx}" y="${cy + 5}" text-anchor="middle" font-family="Segoe UI, Tahoma, Arial, sans-serif" font-size="13" font-weight="600" fill="#ffffff">${entity.table}</text>
+          ${attrEls}
+        </svg>
+      `;
+    }
+
+    const root = document.getElementById("diagrams");
+    ENTITIES.forEach((entity, index) => {
+      const card = document.createElement("article");
+      card.className = "diagram-card";
+      card.innerHTML = `
+        <header>
+          <strong>${index + 1}. ${entity.labelAr}</strong>
+          <small>${entity.table} · ${entity.attributes.length} خاصية</small>
+        </header>
+        ${renderDiagram(entity)}
+      `;
+      root.appendChild(card);
+    });
+  </script>
+</body>
+</html>

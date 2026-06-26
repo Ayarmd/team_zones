@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZONES — مخططات ERD والعلاقات</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --ink: #1a1f36;
+      --muted: #5c6478;
+      --accent: #6b5478;
+      --line: #d8deea;
+      --pk: #2563eb;
+      --fk: #059669;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+    .cover {
+      background: linear-gradient(135deg, #6b5478 0%, #836a90 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      margin-bottom: 28px;
+      page-break-after: always;
+    }
+
+    .cover h1 { margin: 0 0 8px; font-size: 2rem; }
+    .cover p { margin: 6px 0; opacity: 0.95; }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .legend span {
+      background: rgba(255,255,255,0.14);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+    }
+
+    .page {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 28px;
+      page-break-after: always;
+      box-shadow: 0 8px 24px rgba(26,31,54,0.06);
+    }
+
+    .page h2 {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 1.35rem;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .page .subtitle {
+      color: var(--muted);
+      margin: 0 0 18px;
+      font-size: 0.95rem;
+    }
+
+    .mermaid {
+      direction: ltr;
+      text-align: center;
+      overflow-x: auto;
+      background: #fafbff;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 120px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fbfcff;
+    }
+
+    .card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--accent); }
+    .card ul { margin: 0; padding-right: 18px; font-size: 0.9rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 12px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: right;
+    }
+
+    th { background: #eef1f8; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag-1n { background: #dbeafe; color: #1d4ed8; }
+    .tag-nm { background: #dcfce7; color: #166534; }
+    .tag-11 { background: #fef3c7; color: #92400e; }
+
+    .doc-only .page h2 { color: #334155; }
+
+    @media print {
+      body { background: #fff; }
+      .wrap { max-width: none; padding: 0; }
+      .page, .cover { box-shadow: none; border-radius: 0; border: none; }
+      .no-print { display: none !important; }
+    }
+
+    body.mode-erd .doc-only { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="report-full">
+    <div id="report-erd">
+
+      <header class="cover">
+        <h1>منصة ZONES — مخططات ERD والعلاقات</h1>
+        <p>System Analysis &amp; Design Documentation — مستخرج من Laravel Migrations &amp; Models</p>
+        <p>42 جدولاً · 28 كيان أعمال · الكيان المركزي: <strong>stations</strong></p>
+        <div class="legend">
+          <span><strong>PK</strong> — مفتاح أساسي</span>
+          <span><strong>FK</strong> — مفتاح أجنبي</span>
+          <span><strong>1:N</strong> — One To Many</span>
+          <span><strong>N:M</strong> — Many To Many</span>
+          <span><strong>1:1</strong> — One To One</span>
+        </div>
+      </header>
+
+      <!-- 1 CORE -->
+      <section class="page">
+        <h2>1. ERD — النواة المركزية (الصالة)</h2>
+        <p class="subtitle">العلاقات الأساسية: مستخدم ↔ صالة ↔ باقة ↔ جهاز ↔ حجز</p>
+        <pre class="mermaid">
+erDiagram
+    USERS ||--o| STATIONS : "1:1 يدير manager_id"
+    USERS }o--|| STATIONS : "N:1 يعمل station_id"
+    STATIONS ||--|{ PACKAGES : "1:N"
+    STATIONS ||--|{ DEVICES : "1:N"
+    PACKAGES ||--o{ DEVICES : "1:N package_id"
+    STATIONS ||--|{ BOOKINGS : "1:N"
+    PACKAGES ||--|{ BOOKINGS : "1:N"
+    DEVICES ||--o{ BOOKINGS : "1:N"
+    USERS ||--o{ BOOKINGS : "1:N user_id"
+
+    USERS {
+        bigint id PK
+        string full_name
+        string email UK
+        string phone UK
+        enum account_status
+        int loyalty_points_balance
+        bigint station_id FK
+    }
+
+    STATIONS {
+        bigint id PK
+        bigint manager_id FK
+        string name
+        string slug UK
+        boolean is_active
+        boolean is_published
+        boolean bookings_enabled
+    }
+
+    PACKAGES {
+        bigint id PK
+        bigint station_id FK
+        string name
+        enum package_type
+        decimal hourly_price
+        int minimum_hours
+        int maximum_hours
+    }
+
+    DEVICES {
+        bigint id PK
+        bigint station_id FK
+        bigint package_id FK
+        string device_code UK
+        enum device_type
+        enum operational_status
+    }
+
+    BOOKINGS {
+        bigint id PK
+        bigint user_id FK
+        bigint station_id FK
+        bigint device_id FK
+        bigint package_id FK
+        string booking_number UK
+        enum booking_status
+        enum session_status
+        decimal total_price
+    }
+        </pre>
+      </section>
+
+      <!-- 2 BOOKING PAYMENT -->
+      <section class="page">
+        <h2>2. ERD — الحجز والدفع والولاء</h2>
+        <p class="subtitle">One To One بين الحجز والدفعة · One To Many للمعاملات</p>
+        <pre class="mermaid">
+erDiagram
+    BOOKINGS ||--|| PAYMENTS : "1:1 booking_id UQ"
+    BOOKINGS ||--o{ PAYMENT_TRANSACTIONS : "1:N"
+    BOOKINGS ||--o{ LOYALTY_POINT_TRANSACTIONS : "1:N"
+    BOOKINGS }o--o| OFFERS : "N:1 offer_id"
+    OFFERS ||--|{ OFFER_TIME_SLOTS : "1:N"
+    STATIONS ||--o{ OFFERS : "1:N"
+    PACKAGES ||--o{ OFFERS : "1:N"
+    USERS ||--o{ PAYMENTS : "1:N"
+    USERS ||--o{ PAYMENT_TRANSACTIONS : "1:N"
+    USERS ||--o{ LOYALTY_POINT_TRANSACTIONS : "1:N"
+
+    BOOKINGS {
+        bigint id PK
+        bigint offer_id
+        enum booking_type
+        enum payment_method
+        enum payment_status
+        decimal platform_commission_amount
+    }
+
+    PAYMENTS {
+        bigint id PK
+        bigint booking_id FK_UK
+        bigint user_id FK
+        decimal amount
+        enum payment_method
+        enum status
+    }
+
+    PAYMENT_TRANSACTIONS {
+        bigint id PK
+        string invoice_no UK
+        bigint booking_id FK
+        bigint user_id FK
+        decimal amount
+        string gateway
+        enum status
+    }
+
+    LOYALTY_POINT_TRANSACTIONS {
+        bigint id PK
+        bigint user_id FK
+        bigint booking_id FK
+        string type
+        int points
+        int balance_after
+    }
+
+    OFFERS {
+        bigint id PK
+        bigint station_id FK
+        bigint package_id FK
+        string title
+        decimal original_price
+        decimal discounted_price
+    }
+
+    OFFER_TIME_SLOTS {
+        bigint id PK
+        bigint offer_id FK
+        string time_range
+        boolean is_available
+    }
+        </pre>
+      </section>
+
+      <!-- 3 STATION SERVICES -->
+      <section class="page">
+        <h2>3. ERD — الصالة والخدمات (Many To Many)</h2>
+        <p class="subtitle">جدول الربط: service_station</p>
+        <pre class="mermaid">
+erDiagram
+    STATIONS }o--o{ SERVICES : "N:M service_station"
+    STATIONS ||--o{ STATION_BOOKING_STOPS : "1:N"
+    USERS ||--o{ STATION_BOOKING_STOPS : "1:N created_by"
+
+    STATIONS {
+        bigint id PK
+        string name
+        json available_services
+        json working_days
+        time opens_at
+        time closes_at
+    }
+
+    SERVICES {
+        bigint id PK
+        string name
+        string slug UK
+        string icon
+        boolean is_active
+    }
+
+    SERVICE_STATION {
+        bigint id PK
+        bigint station_id FK
+        bigint service_id FK
+    }
+
+    STATION_BOOKING_STOPS {
+        bigint id PK
+        bigint station_id FK
+        bigint created_by FK
+        string reason_key
+        date starts_on
+        date ends_on
+        string status
+    }
+        </pre>
+      </section>
+
+      <!-- 4 TOURNAMENTS -->
+      <section class="page">
+        <h2>4. ERD — البطولات</h2>
+        <p class="subtitle">بطولة → مشاركون → مباريات (player1, player2, winner)</p>
+        <pre class="mermaid">
+erDiagram
+    STATIONS ||--|{ TOURNAMENTS : "1:N"
+    TOURNAMENTS ||--|{ TOURNAMENT_PARTICIPANTS : "1:N"
+    TOURNAMENTS ||--|{ TOURNAMENT_MATCHES : "1:N"
+    USERS ||--o{ TOURNAMENT_PARTICIPANTS : "1:N user_id"
+    TOURNAMENT_PARTICIPANTS ||--o{ TOURNAMENT_MATCHES : "player1_id"
+    TOURNAMENT_PARTICIPANTS ||--o{ TOURNAMENT_MATCHES : "player2_id"
+    TOURNAMENT_PARTICIPANTS ||--o{ TOURNAMENT_MATCHES : "winner_id"
+
+    TOURNAMENTS {
+        bigint id PK
+        bigint station_id FK
+        string title
+        string game_name
+        timestamp start_date
+        timestamp registration_deadline
+        enum status
+        tinyint max_participants
+    }
+
+    TOURNAMENT_PARTICIPANTS {
+        bigint id PK
+        bigint tournament_id FK
+        bigint user_id FK
+        string name
+        string status
+        timestamp registered_at
+    }
+
+    TOURNAMENT_MATCHES {
+        bigint id PK
+        bigint tournament_id FK
+        bigint player1_id FK
+        bigint player2_id FK
+        bigint winner_id FK
+        tinyint round_index
+        tinyint match_index
+        enum status
+    }
+        </pre>
+      </section>
+
+      <!-- 5 REVIEWS -->
+      <section class="page">
+        <h2>5. ERD — التقييم والتعليق</h2>
+        <p class="subtitle">تعليقات شجرية (parent_id) · تقييم فريد لكل فئة</p>
+        <pre class="mermaid">
+erDiagram
+    STATIONS ||--|{ REVIEWS : "1:N"
+    USERS ||--o{ REVIEWS : "1:N"
+    STATIONS ||--|{ STATION_COMMENTS : "1:N"
+    USERS ||--|{ STATION_COMMENTS : "1:N"
+    STATION_COMMENTS ||--o{ STATION_COMMENTS : "1:N parent_id"
+    PACKAGES ||--|{ DEVICE_RATINGS : "1:N"
+    USERS ||--|{ DEVICE_RATINGS : "1:N"
+
+    REVIEWS {
+        bigint id PK
+        bigint station_id FK
+        bigint user_id FK
+        enum category
+        tinyint stars
+    }
+
+    STATION_COMMENTS {
+        bigint id PK
+        bigint station_id FK
+        bigint user_id FK
+        bigint parent_id FK
+        text body
+        timestamp edited_at
+    }
+
+    DEVICE_RATINGS {
+        bigint id PK
+        bigint user_id FK
+        bigint package_id FK
+        tinyint rating_value
+    }
+        </pre>
+      </section>
+
+      <!-- 6 MAINTENANCE -->
+      <section class="page">
+        <h2>6. ERD — الصيانة والمصروفات</h2>
+        <p class="subtitle">One To One بين عطل الجهاز ومصروف الصالة</p>
+        <pre class="mermaid">
+erDiagram
+    STATIONS ||--|{ DEVICE_FAULTS : "1:N"
+    DEVICES ||--|{ DEVICE_FAULTS : "1:N"
+    USERS ||--o{ DEVICE_FAULTS : "1:N reported_by"
+    DEVICE_FAULTS ||--o| HALL_EXPENSES : "1:1 device_fault_id UQ"
+    STATIONS ||--|{ HALL_EXPENSES : "1:N"
+    USERS ||--o{ HALL_EXPENSES : "1:N created_by"
+
+    DEVICE_FAULTS {
+        bigint id PK
+        bigint station_id FK
+        bigint device_id FK
+        bigint reported_by FK
+        enum status
+        decimal maintenance_cost
+        boolean archived
+    }
+
+    HALL_EXPENSES {
+        bigint id PK
+        bigint station_id FK
+        bigint device_fault_id FK_UK
+        bigint created_by FK
+        string name
+        decimal amount
+        boolean is_paid
+        date added_at
+    }
+        </pre>
+      </section>
+
+      <!-- 7 NOTIFICATIONS -->
+      <section class="page">
+        <h2>7. ERD — الإشعارات والبث</h2>
+        <p class="subtitle">بث إداري → إشعارات موظف · إشعارات عميل · Push tokens</p>
+        <pre class="mermaid">
+erDiagram
+    STATIONS ||--|{ STATION_BROADCASTS : "1:N"
+    USERS ||--|{ STATION_BROADCASTS : "1:N created_by"
+    STATION_BROADCASTS ||--o{ STAFF_NOTIFICATIONS : "1:N"
+    USERS ||--|{ STAFF_NOTIFICATIONS : "1:N"
+    STATIONS ||--o{ STAFF_NOTIFICATIONS : "1:N"
+    USERS ||--|{ CUSTOMER_NOTIFICATIONS : "1:N"
+    USERS ||--|{ DEVICE_TOKENS : "1:N"
+
+    STATION_BROADCASTS {
+        bigint id PK
+        bigint station_id FK
+        bigint created_by FK
+        string name
+        text body
+        string severity
+        string status
+    }
+
+    STAFF_NOTIFICATIONS {
+        bigint id PK
+        bigint user_id FK
+        bigint station_id FK
+        bigint broadcast_id FK
+        string type
+        timestamp read_at
+    }
+
+    CUSTOMER_NOTIFICATIONS {
+        bigint id PK
+        bigint user_id FK
+        string type
+        string title
+        text body
+        json payload
+    }
+
+    DEVICE_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        string token UK
+        string platform
+    }
+        </pre>
+      </section>
+
+      <!-- 8 ONBOARDING RBAC -->
+      <section class="page">
+        <h2>8. ERD — الانضمام والصلاحيات</h2>
+        <p class="subtitle">طلب انضمام → صالة → دعوة · Spatie RBAC</p>
+        <pre class="mermaid">
+erDiagram
+    HALL_JOIN_REQUESTS ||--o| STATIONS : "1:1 station_id"
+    HALL_JOIN_REQUESTS ||--o{ INVITATIONS : "1:N"
+    USERS ||--|{ INVITATIONS : "1:N invited_by"
+    STATIONS ||--o{ INVITATIONS : "1:N"
+    USERS }o--o{ ROLES : "N:M model_has_roles"
+    ROLES }o--o{ PERMISSIONS : "N:M role_has_permissions"
+    USERS }o--o{ PERMISSIONS : "N:M model_has_permissions"
+
+    HALL_JOIN_REQUESTS {
+        bigint id PK
+        string hall_name
+        string manager_email
+        enum status
+        bigint station_id FK
+        decimal commission_rate
+    }
+
+    INVITATIONS {
+        bigint id PK
+        string email
+        string role
+        string token UK
+        bigint invited_by FK
+        bigint hall_join_request_id FK
+        bigint station_id FK
+        timestamp expires_at
+    }
+
+    ROLES {
+        bigint id PK
+        string name UK
+        string guard_name
+    }
+
+    PERMISSIONS {
+        bigint id PK
+        string name UK
+        string guard_name
+    }
+
+    PLATFORM_SETTINGS {
+        bigint id PK
+        int loyalty_points_per_session
+        decimal platform_commission_rate
+        string platform_name
+        string platform_logo_path
+    }
+        </pre>
+      </section>
+
+      <!-- 9 FULL RELATIONSHIP MAP -->
+      <section class="page">
+        <h2>9. Relationship Map — خريطة العلاقات الكاملة</h2>
+        <p class="subtitle">Crow's Foot notation · جميع الكيانات الرئيسية</p>
+        <pre class="mermaid">
+flowchart TB
+    subgraph CORE["النواة"]
+        U[users]
+        S[stations]
+        P[packages]
+        D[devices]
+        B[bookings]
+    end
+
+    subgraph COMMERCE["التجارة"]
+        O[offers]
+        OTS[offer_time_slots]
+        PAY[payments]
+        PT[payment_transactions]
+        LPT[loyalty_point_transactions]
+        PS[platform_settings]
+    end
+
+    subgraph EVENTS["الفعاليات"]
+        T[tournaments]
+        TP[tournament_participants]
+        TM[tournament_matches]
+    end
+
+    subgraph SOCIAL["التفاعل"]
+        R[reviews]
+        SC[station_comments]
+        DR[device_ratings]
+    end
+
+    subgraph OPS["العمليات"]
+        DF[device_faults]
+        HE[hall_expenses]
+        SBS[station_booking_stops]
+        SB[station_broadcasts]
+        SN[staff_notifications]
+        CN[customer_notifications]
+    end
+
+    subgraph ONBOARD["الانضمام"]
+        HJR[hall_join_requests]
+        INV[invitations]
+        SRV[services]
+        SS[service_station]
+    end
+
+    U -->|"1:1 manager"| S
+    U -->|"N:1 employee"| S
+    S -->|"1:N"| P
+    S -->|"1:N"| D
+    P -->|"1:N"| D
+    S -->|"1:N"| B
+    P -->|"1:N"| B
+    D -->|"1:N"| B
+    U -->|"1:N"| B
+
+    B -->|"1:1"| PAY
+    B -->|"1:N"| PT
+    B -->|"1:N"| LPT
+    O -->|"1:N"| B
+    S -->|"1:N"| O
+    P -->|"1:N"| O
+    O -->|"1:N"| OTS
+
+    S -->|"1:N"| T
+    T -->|"1:N"| TP
+    T -->|"1:N"| TM
+    U -->|"1:N"| TP
+    TP -->|"1:N"| TM
+
+    S -->|"1:N"| R
+    U -->|"1:N"| R
+    S -->|"1:N"| SC
+    SC -->|"1:N self"| SC
+    P -->|"1:N"| DR
+
+    S -->|"1:N"| DF
+    D -->|"1:N"| DF
+    DF -->|"1:1"| HE
+    S -->|"1:N"| HE
+
+    S -->|"N:M"| SRV
+    SS -.-> S
+    SS -.-> SRV
+
+    HJR -->|"1:1"| S
+    HJR -->|"1:N"| INV
+    U -->|"1:N"| INV
+
+    S -->|"1:N"| SB
+    SB -->|"1:N"| SN
+    U -->|"1:N"| CN
+        </pre>
+      </section>
+
+      <!-- 10 CARDINALITY TABLE -->
+      <section class="page">
+        <h2>10. جدول Cardinality — العلاقات بالأرقام</h2>
+        <p class="subtitle">مرجع سريع للعلاقات بين الكيانات</p>
+        <table>
+          <thead>
+            <tr>
+              <th>من</th>
+              <th>إلى</th>
+              <th>النوع</th>
+              <th>FK / Pivot</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>المستخدم</td><td>الصالة (مدير)</td><td><span class="tag tag-11">1:1</span></td><td>stations.manager_id</td></tr>
+            <tr><td>المستخدم</td><td>الصالة (موظف)</td><td><span class="tag tag-1n">N:1</span></td><td>users.station_id</td></tr>
+            <tr><td>الصالة</td><td>الباقة</td><td><span class="tag tag-1n">1:N</span></td><td>packages.station_id</td></tr>
+            <tr><td>الصالة</td><td>الجهاز</td><td><span class="tag tag-1n">1:N</span></td><td>devices.station_id</td></tr>
+            <tr><td>الباقة</td><td>الجهاز</td><td><span class="tag tag-1n">1:N</span></td><td>devices.package_id</td></tr>
+            <tr><td>الصالة</td><td>الحجز</td><td><span class="tag tag-1n">1:N</span></td><td>bookings.station_id</td></tr>
+            <tr><td>الحجز</td><td>الدفعة</td><td><span class="tag tag-11">1:1</span></td><td>payments.booking_id UQ</td></tr>
+            <tr><td>الصالة</td><td>الخدمة</td><td><span class="tag tag-nm">N:M</span></td><td>service_station</td></tr>
+            <tr><td>البطولة</td><td>المشارك</td><td><span class="tag tag-1n">1:N</span></td><td>tournament_participants.tournament_id</td></tr>
+            <tr><td>البطولة</td><td>المباراة</td><td><span class="tag tag-1n">1:N</span></td><td>tournament_matches.tournament_id</td></tr>
+            <tr><td>عطل الجهاز</td><td>مصروف الصالة</td><td><span class="tag tag-11">1:1</span></td><td>hall_expenses.device_fault_id UQ</td></tr>
+            <tr><td>تعليق الصالة</td><td>ردود</td><td><span class="tag tag-1n">1:N</span></td><td>station_comments.parent_id</td></tr>
+            <tr><td>طلب الانضمام</td><td>الصالة</td><td><span class="tag tag-11">1:1</span></td><td>hall_join_requests.station_id</td></tr>
+            <tr><td>المستخدم</td><td>الدور</td><td><span class="tag tag-nm">N:M</span></td><td>model_has_roles</td></tr>
+          </tbody>
+        </table>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>One To One (1:1)</h3>
+            <ul>
+              <li>الحجز ↔ الدفعة</li>
+              <li>عطل الجهاز ↔ مصروف الصالة</li>
+              <li>المستخدم ↔ الصالة المُدارة</li>
+              <li>طلب الانضمام ↔ الصالة المُنشأة</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Many To Many (N:M)</h3>
+            <ul>
+              <li>الصالة ↔ الخدمة</li>
+              <li>المستخدم ↔ الدور</li>
+              <li>المستخدم ↔ الصلاحية</li>
+              <li>الدور ↔ الصلاحية</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /report-erd -->
+
+    <div class="doc-only">
+      <section class="page">
+        <h2>ملاحظة التصدير</h2>
+        <p class="subtitle">هذا القسم يظهر في التقرير الكامل فقط</p>
+        <ul>
+          <li>لتصدير مخططات ERD فقط: <code>npm run pdf</code></li>
+          <li>لتصدير التقرير الكامل: <code>npm run pdf:all</code></li>
+          <li>أو افتح هذا الملف في Chrome → طباعة → حفظ كـ PDF</li>
+        </ul>
+      </section>
+    </div>
+
+    <p class="no-print" style="text-align:center;color:var(--muted);margin:24px 0;">
+      افتح في المتصفح للمعاينة · شغّل <code>npm run pdf</code> لتوليد PDF
+    </p>
+  </div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#eef2ff",
+        primaryTextColor: "#1a1f36",
+        primaryBorderColor: "#6b5478",
+        lineColor: "#64748b",
+        secondaryColor: "#f0fdf4",
+        tertiaryColor: "#fff7ed",
+        fontFamily: "Segoe UI, Tahoma, Arial, sans-serif",
+      },
+      er: {
+        layoutDirection: "TB",
+        useMaxWidth: true,
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: "basis",
+      },
+    });
+
+    if (location.search.includes("mode=erd")) {
+      document.body.classList.add("mode-erd");
+    }
+  </script>
+</body>
+</html>

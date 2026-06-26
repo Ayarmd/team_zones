@@ -1,0 +1,13 @@
+{
+  "name": "zones-system-analysis-export",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pdf": "node export-to-pdf.mjs",
+    "pdf:all": "node export-to-pdf.mjs --all",
+    "pdf:attributes": "node export-to-pdf.mjs --attributes"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.2.0"
+  }
+}
