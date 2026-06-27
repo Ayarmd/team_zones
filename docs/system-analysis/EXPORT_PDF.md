@@ -21,7 +21,11 @@ npm run pdf:all
 
 **النتيجة:** `zones-system-analysis-full.pdf` — التقرير الكامل
 
-> أول تشغيل يثبّت `puppeteer` تلقائياً.
+> أول تشغيل: إذا فشل PDF شغّل `npm run setup:browser` أو ثبّت Google Chrome.
+
+```powershell
+npm run setup:browser
+```
 
 ---
 

@@ -10,7 +10,7 @@ class StaffNotification extends Model
     protected $fillable = [
         'user_id',
         'station_id',
-        'broadcast_id',
+        'station_alert_id',
         'type',
         'title',
         'body',
@@ -36,8 +36,8 @@ class StaffNotification extends Model
         return $this->belongsTo(Station::class);
     }
 
-    public function broadcast(): BelongsTo
+    public function stationAlert(): BelongsTo
     {
-        return $this->belongsTo(StationBroadcast::class, 'broadcast_id');
+        return $this->belongsTo(StationAlert::class, 'station_alert_id');
     }
 }

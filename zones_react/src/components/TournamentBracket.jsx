@@ -145,7 +145,7 @@ export default function TournamentBracket({
   const [scoreB, setScoreB] = useState("");
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [broadcastNotice, setBroadcastNotice] = useState("");
+  const [winnerPushNotice, setWinnerPushNotice] = useState("");
 
   useEffect(() => {
     if (!tournament) {
@@ -331,7 +331,7 @@ export default function TournamentBracket({
       }
       applyBracketFromServer(result.bracket);
       if (result.notificationQueued) {
-        setBroadcastNotice("تم إرسال إشعار الفوز لجميع مستخدمي التطبيق.");
+        setWinnerPushNotice("تم إرسال إشعار الفوز لجميع مستخدمي التطبيق.");
       }
       closeAll();
       return;
@@ -397,9 +397,9 @@ export default function TournamentBracket({
         </p>
       )}
 
-      {broadcastNotice ? (
-        <p className="tb-broadcast-notice" role="status">
-          {broadcastNotice}
+      {winnerPushNotice ? (
+        <p className="tb-winner-push-notice" role="status">
+          {winnerPushNotice}
         </p>
       ) : null}
 

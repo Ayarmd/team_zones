@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\DeviceToken;
-use App\Services\FcmBroadcastService;
+use App\Services\FcmPushService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -22,10 +22,10 @@ class SendGlobalWinnerPushJob implements ShouldQueue
         public string $tournamentTitle = '',
     ) {}
 
-    public function handle(FcmBroadcastService $fcm): void
+    public function handle(FcmPushService $fcm): void
     {
         if (! $fcm->isConfigured()) {
-            Log::info('FCM not configured — skipping tournament winner broadcast.', [
+            Log::info('FCM not configured — skipping tournament winner push.', [
                 'tournament_id' => $this->tournamentId,
             ]);
 

@@ -64,7 +64,8 @@ class PushNotificationService {
     if (notification == null) return;
 
     final data = message.data.map((k, v) => MapEntry(k, v.toString()));
-    final isManagerBroadcast = data['type'] == 'manager_broadcast';
+    final isStationAlert =
+        data['type'] == 'station_alert' || data['type'] == 'manager_broadcast';
 
     final pushMessage = PushMessage(
       title: notification.title ?? '',
@@ -80,9 +81,9 @@ class PushNotificationService {
       notification.body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          isManagerBroadcast ? 'zones_alerts' : 'zones_tournaments',
-          isManagerBroadcast ? 'تنبيهات الصالة' : 'بطولات زونز',
-          channelDescription: isManagerBroadcast
+          isStationAlert ? 'zones_alerts' : 'zones_tournaments',
+          isStationAlert ? 'تنبيهات الصالة' : 'بطولات زونز',
+          channelDescription: isStationAlert
               ? 'تنبيهات المدير والصيانة'
               : 'إشعارات البطولات والفائزين',
           importance: Importance.high,

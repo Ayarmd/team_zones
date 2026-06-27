@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class MaintenanceBookingCancellationService
 {
     public function __construct(
-        private readonly FcmBroadcastService $fcm,
+        private readonly FcmPushService $fcm,
         private readonly BookingAvailabilityService $availability,
     ) {}
 

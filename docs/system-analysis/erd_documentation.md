@@ -37,7 +37,7 @@ erDiagram
     USERS ||--o{ DEVICE_TOKENS : "أجهزة Push"
     USERS ||--o{ DEVICE_FAULTS : "يُبلّغ"
     USERS ||--o{ HALL_EXPENSES : "يُنشئ"
-    USERS ||--o{ STATION_BROADCASTS : "يُبث"
+    USERS ||--o{ STATION_ALERTS : "يُصدِر"
     USERS ||--o{ STATION_BOOKING_STOPS : "يُوقف"
     USERS ||--o{ INVITATIONS : "يُرسل"
 
@@ -51,7 +51,7 @@ erDiagram
     STATIONS ||--o{ HALL_EXPENSES : "مصروفات"
     STATIONS ||--o{ DEVICE_FAULTS : "أعطال"
     STATIONS ||--o{ STATION_BOOKING_STOPS : "إيقاف"
-    STATIONS ||--o{ STATION_BROADCASTS : "بث"
+    STATIONS ||--o{ STATION_ALERTS : "تنبيهات"
     STATIONS }o--o{ SERVICES : "service_station"
     STATIONS ||--o| HALL_JOIN_REQUESTS : "تُنشأ من"
 
@@ -79,7 +79,7 @@ erDiagram
     TOURNAMENT_PARTICIPANTS ||--o{ TOURNAMENT_MATCHES : "winner"
 
     STATION_COMMENTS ||--o{ STATION_COMMENTS : "parent/replies"
-    STATION_BROADCASTS ||--o{ STAFF_NOTIFICATIONS : "يُولّد"
+    STATION_ALERTS ||--o{ STAFF_NOTIFICATIONS : "يُولّد"
     DEVICE_FAULTS ||--o| HALL_EXPENSES : "مصروف صيانة"
 
     HALL_JOIN_REQUESTS ||--o{ INVITATIONS : "دعوات"
@@ -332,15 +332,15 @@ erDiagram
 
 ```mermaid
 erDiagram
-    STATION ||--|{ STATION_BROADCAST : sends
-    USER ||--|{ STATION_BROADCAST : creates
-    STATION_BROADCAST ||--o{ STAFF_NOTIFICATION : triggers
+    STATION ||--|{ STATION_ALERT : sends
+    USER ||--|{ STATION_ALERT : creates
+    STATION_ALERT ||--o{ STAFF_NOTIFICATION : triggers
     USER ||--|{ STAFF_NOTIFICATION : receives
     STATION ||--o{ STAFF_NOTIFICATION : context
     USER ||--|{ CUSTOMER_NOTIFICATION : receives
     USER ||--|{ DEVICE_TOKEN : push_token
 
-    STATION_BROADCAST {
+    STATION_ALERT {
         bigint id PK
         bigint station_id FK
         bigint created_by FK
@@ -354,7 +354,7 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint station_id FK
-        bigint broadcast_id FK
+        bigint station_alert_id FK
         string type
         timestamp read_at
     }
@@ -478,7 +478,7 @@ erDiagram
 
 ┌──────────────┐        ┌──────────────┐        ┌──────────────┐
 │ إشعار العميل │        │ إشعار الموظف │◄───────│  البث الإداري│
-│  customer_   │        │   staff_     │  1:N   │  broadcasts  │
+│  customer_   │        │   staff_     │  1:N   │  station_alerts  │
 │ notifications│        │notifications │        └──────────────┘
 └──────────────┘        └──────────────┘
 
@@ -512,7 +512,7 @@ erDiagram
 | Tournament | enrolls | TournamentParticipant | 1 : N | tournament_participants.tournament_id |
 | Tournament | schedules | TournamentMatch | 1 : N | tournament_matches.tournament_id |
 | DeviceFault | expense | HallExpense | 1 : 0..1 | hall_expenses.device_fault_id (UQ) |
-| StationBroadcast | notifies | StaffNotification | 1 : N | staff_notifications.broadcast_id |
+| StationAlert | notifies | StaffNotification | 1 : N | staff_notifications.station_alert_id |
 | StationComment | replies | StationComment | 1 : N | station_comments.parent_id |
 | HallJoinRequest | creates | Station | 1 : 0..1 | hall_join_requests.station_id |
 | User | roles | Role | N : M | model_has_roles |

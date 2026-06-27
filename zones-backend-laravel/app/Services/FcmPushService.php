@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class FcmBroadcastService
+class FcmPushService
 {
     private ?string $accessToken = null;
 
@@ -181,7 +181,7 @@ class FcmBroadcastService
         return $this->accessToken;
     }
 
-  /** @param array<string, mixed> $credentials */
+    /** @param array<string, mixed> $credentials */
     private function createJwt(array $credentials): string
     {
         $now = time();

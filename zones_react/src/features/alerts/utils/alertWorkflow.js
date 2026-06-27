@@ -6,10 +6,10 @@ import {
   validateTargetAudienceForSubmit,
 } from "../data/alertsMeta";
 import {
-  archiveManagerBroadcast,
-  createManagerBroadcast,
-  emitBroadcastsArchived,
-} from "../data/managerBroadcastsApi";
+  archiveManagerStationAlert,
+  createManagerStationAlert,
+  emitAlertsArchived,
+} from "../data/managerAlertsApi";
 import { addAlert, stopAlert } from "../data/managerAlertsStorage";
 import { pushManagerAlertNotification } from "../data/hallNotificationsStorage";
 
@@ -59,7 +59,7 @@ export async function createManagerAlert(payload) {
   }
 
   if (useApiManager()) {
-    const result = await createManagerBroadcast({
+    const result = await createManagerStationAlert({
       ...payload,
       targetAudience,
     });
@@ -69,7 +69,7 @@ export async function createManagerAlert(payload) {
     }
 
     const alert = {
-      ...result.broadcast,
+      ...result.alert,
       targetCategories,
       targetAudience,
       situationDescription: payload.situationDescription,
@@ -101,22 +101,22 @@ export async function createManagerAlert(payload) {
 
 export async function archiveManagerAlert(alert, { emit = true } = {}) {
   if (useApiManager() && alert?.id) {
-    const result = await archiveManagerBroadcast(alert.id);
+    const result = await archiveManagerStationAlert(alert.id);
     if (!result.ok) {
       zonesToastError(result.error || "تعذّر أرشفة التنبيه", "خطأ");
-      return { ok: false, broadcast: null };
+      return { ok: false, alert: null };
     }
-    if (emit && result.broadcast) {
-      emitBroadcastsArchived([result.broadcast]);
+    if (emit && result.alert) {
+      emitAlertsArchived([result.alert]);
     }
-    return { ok: true, broadcast: result.broadcast };
+    return { ok: true, alert: result.alert };
   }
 
   const archived = stopAlert(alert.id);
   if (archived && emit) {
-    emitBroadcastsArchived([archived]);
+    emitAlertsArchived([archived]);
   }
-  return { ok: Boolean(archived), broadcast: archived };
+  return { ok: Boolean(archived), alert: archived };
 }
 
 /** @deprecated استخدم archiveManagerAlert */
@@ -133,29 +133,29 @@ export async function archiveManagerAlerts(alerts, ids) {
   const idSet = new Set(ids);
   const targets = alerts.filter((row) => idSet.has(row.id));
   if (!targets.length) {
-    return { ok: false, success: 0, total: 0, broadcasts: [] };
+    return { ok: false, success: 0, total: 0, alerts: [] };
   }
 
-  const archivedBroadcasts = [];
+  const archivedAlerts = [];
   let success = 0;
 
   for (const alert of targets) {
     const result = await archiveManagerAlert(alert, { emit: false });
     if (result.ok) {
       success += 1;
-      if (result.broadcast) archivedBroadcasts.push(result.broadcast);
+      if (result.alert) archivedAlerts.push(result.alert);
     }
   }
 
-  if (archivedBroadcasts.length) {
-    emitBroadcastsArchived(archivedBroadcasts);
+  if (archivedAlerts.length) {
+    emitAlertsArchived(archivedAlerts);
   }
 
   return {
     ok: success === targets.length,
     success,
     total: targets.length,
-    broadcasts: archivedBroadcasts,
+    alerts: archivedAlerts,
   };
 }
 

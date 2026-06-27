@@ -136,6 +136,8 @@
       <span><i class="swatch-attr"></i> خاصية (Attribute)</span>
       <span><u>id</u> = PK</span>
       <span style="color:var(--fk)">* = FK</span>
+      <span>† = UQ</span>
+      <span>° = UQ مركّب</span>
     </div>
   </div>
 
@@ -223,8 +225,11 @@
     }
 
     function formatLabel(attr) {
-      if (attr.fk) return `${attr.name} *`;
-      return attr.name;
+      let label = attr.name;
+      if (attr.compositeUq) label += " °";
+      else if (attr.uq && !attr.pk) label += " †";
+      if (attr.fk) label += " *";
+      return label;
     }
 
     function renderDiagram(entity) {

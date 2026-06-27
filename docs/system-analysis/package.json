@@ -3,9 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome || exit 0",
+    "setup:browser": "npx puppeteer browsers install chrome",
     "pdf": "node export-to-pdf.mjs",
     "pdf:all": "node export-to-pdf.mjs --all",
-    "pdf:attributes": "node export-to-pdf.mjs --attributes"
+    "pdf:attributes": "node export-to-pdf.mjs --attributes",
+    "pdf:relationships": "node export-to-pdf.mjs --relationships",
+    "dictionary": "node build-database-dictionary.mjs"
   },
   "devDependencies": {
     "puppeteer": "^24.2.0"

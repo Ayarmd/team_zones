@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\StationBroadcast;
+use App\Models\StationAlert;
 use App\Models\User;
 use App\Services\NotificationTargetingService;
 use App\Support\NotificationTargetAudience;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class ManagerBroadcastController extends Controller
+class ManagerAlertController extends Controller
 {
     public function __construct(
         private readonly NotificationTargetingService $targeting,
@@ -32,16 +32,16 @@ class ManagerBroadcastController extends Controller
             $status = 'stopped';
         }
 
-        $broadcasts = StationBroadcast::query()
+        $alerts = StationAlert::query()
             ->where('station_id', $stationId)
             ->when($status === 'active', fn ($q) => $q->active())
             ->when($status === 'stopped', fn ($q) => $q->archived())
             ->when($status !== 'all' && ! in_array($status, ['active', 'stopped'], true), fn ($q) => $q->where('status', $status))
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn (StationBroadcast $b) => $this->mapBroadcast($b));
+            ->map(fn (StationAlert $alert) => $this->mapAlert($alert));
 
-        return response()->json(['broadcasts' => $broadcasts]);
+        return response()->json(['alerts' => $alerts]);
     }
 
     public function store(Request $request): JsonResponse
@@ -82,7 +82,7 @@ class ManagerBroadcastController extends Controller
         }
 
         $result = DB::transaction(function () use ($validated, $user, $station) {
-            $broadcast = StationBroadcast::create([
+            $alert = StationAlert::create([
                 'station_id' => $station->id,
                 'created_by' => $user->id,
                 'name' => $validated['name'],
@@ -94,68 +94,68 @@ class ManagerBroadcastController extends Controller
                 'starts_at' => now(),
             ]);
 
-            $broadcast->setRelation('station', $station);
-            $delivery = $this->targeting->dispatchBroadcast($broadcast);
+            $alert->setRelation('station', $station);
+            $delivery = $this->targeting->dispatchStationAlert($alert);
 
-            return compact('broadcast', 'delivery');
+            return compact('alert', 'delivery');
         });
 
         return response()->json([
             'message' => 'تم إرسال التنبيه للمستهدفين',
-            'broadcast' => $this->mapBroadcast($result['broadcast']),
+            'alert' => $this->mapAlert($result['alert']),
             'delivery' => $result['delivery'],
         ], 201);
     }
 
-    public function stop(Request $request, StationBroadcast $broadcast): JsonResponse
+    public function stop(Request $request, StationAlert $alert): JsonResponse
     {
-        return $this->archive($request, $broadcast);
+        return $this->archive($request, $alert);
     }
 
-    public function archive(Request $request, StationBroadcast $broadcast): JsonResponse
+    public function archive(Request $request, StationAlert $alert): JsonResponse
     {
         $user = $this->manager($request);
         $stationId = $user->resolvedStationId();
 
-        if (! $stationId || (int) $broadcast->station_id !== (int) $stationId) {
+        if (! $stationId || (int) $alert->station_id !== (int) $stationId) {
             return response()->json(['message' => 'التنبيه غير موجود'], 404);
         }
 
-        if ($broadcast->status !== 'active') {
+        if ($alert->status !== 'active') {
             throw ValidationException::withMessages([
-                'broadcast' => ['التنبيه مؤرشف بالفعل'],
+                'alert' => ['التنبيه مؤرشف بالفعل'],
             ]);
         }
 
-        $broadcast->update([
+        $alert->update([
             'status' => 'stopped',
             'ends_at' => now(),
         ]);
 
         return response()->json([
             'message' => 'تم أرشفة التنبيه',
-            'broadcast' => $this->mapBroadcast($broadcast->fresh()),
+            'alert' => $this->mapAlert($alert->fresh()),
         ]);
     }
 
-    private function mapBroadcast(StationBroadcast $broadcast): array
+    private function mapAlert(StationAlert $alert): array
     {
         return [
-            'id' => $broadcast->id,
-            'name' => $broadcast->name,
-            'body' => $broadcast->body,
-            'situationDescription' => $broadcast->body,
-            'targetAudience' => $broadcast->target_audience,
-            'target_audience' => $broadcast->target_audience,
-            'severity' => $broadcast->severity,
-            'status' => $broadcast->status,
-            'is_archived' => $broadcast->status === 'stopped',
-            'isArchived' => $broadcast->status === 'stopped',
-            'alternativeInstructions' => $broadcast->alternative_instructions ?? '',
-            'alternative_instructions' => $broadcast->alternative_instructions ?? '',
-            'startDate' => $broadcast->starts_at?->toIso8601String(),
-            'endDate' => $broadcast->ends_at?->toIso8601String(),
-            'createdAt' => $broadcast->created_at?->toIso8601String(),
+            'id' => $alert->id,
+            'name' => $alert->name,
+            'body' => $alert->body,
+            'situationDescription' => $alert->body,
+            'targetAudience' => $alert->target_audience,
+            'target_audience' => $alert->target_audience,
+            'severity' => $alert->severity,
+            'status' => $alert->status,
+            'is_archived' => $alert->status === 'stopped',
+            'isArchived' => $alert->status === 'stopped',
+            'alternativeInstructions' => $alert->alternative_instructions ?? '',
+            'alternative_instructions' => $alert->alternative_instructions ?? '',
+            'startDate' => $alert->starts_at?->toIso8601String(),
+            'endDate' => $alert->ends_at?->toIso8601String(),
+            'createdAt' => $alert->created_at?->toIso8601String(),
             'source' => 'api',
         ];
     }

@@ -60,7 +60,7 @@ function mapApiRow(row) {
     id: `api-${row.id}`,
     source: "api",
     apiId: row.id,
-    type: row.type === "manager_broadcast" ? "manager_alert" : row.type,
+    type: row.type === "manager_broadcast" || row.type === "station_alert" ? "manager_alert" : row.type,
     title: row.name || row.title || "",
     body: row.message || "",
     instructions: row.instructions || "",

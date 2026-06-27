@@ -477,15 +477,15 @@ erDiagram
         <p class="subtitle">بث إداري → إشعارات موظف · إشعارات عميل · Push tokens</p>
         <pre class="mermaid">
 erDiagram
-    STATIONS ||--|{ STATION_BROADCASTS : "1:N"
-    USERS ||--|{ STATION_BROADCASTS : "1:N created_by"
-    STATION_BROADCASTS ||--o{ STAFF_NOTIFICATIONS : "1:N"
+    STATIONS ||--|{ STATION_ALERTS : "1:N"
+    USERS ||--|{ STATION_ALERTS : "1:N created_by"
+    STATION_ALERTS ||--o{ STAFF_NOTIFICATIONS : "1:N"
     USERS ||--|{ STAFF_NOTIFICATIONS : "1:N"
     STATIONS ||--o{ STAFF_NOTIFICATIONS : "1:N"
     USERS ||--|{ CUSTOMER_NOTIFICATIONS : "1:N"
     USERS ||--|{ DEVICE_TOKENS : "1:N"
 
-    STATION_BROADCASTS {
+    STATION_ALERTS {
         bigint id PK
         bigint station_id FK
         bigint created_by FK
@@ -499,7 +499,7 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint station_id FK
-        bigint broadcast_id FK
+        bigint station_alert_id FK
         string type
         timestamp read_at
     }
@@ -617,7 +617,7 @@ flowchart TB
         DF[device_faults]
         HE[hall_expenses]
         SBS[station_booking_stops]
-        SB[station_broadcasts]
+        SB[station_alerts]
         SN[staff_notifications]
         CN[customer_notifications]
     end

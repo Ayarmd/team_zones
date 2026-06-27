@@ -67,8 +67,8 @@ class NotificationRepository {
       );
     }
 
-  // Manager broadcasts open notifications drawer — no deep link yet.
-    if (type == 'manager_broadcast') return null;
+  // Station alerts open notifications drawer — no deep link yet.
+    if (type == 'station_alert' || type == 'manager_broadcast') return null;
 
     return null;
   }

@@ -24,7 +24,7 @@
 
 | # | العلاقة | النوع | التفاصيل التقنية |
 |---|---------|-------|------------------|
-| 1 | المستخدم **يدير** صالة واحدة (كمدير) | **One To One** | `stations.manager_id` → `users.id` (nullable) |
+| 1 | المستخدم **يدير** صالة (كمدير) | **One To Many** | `stations.manager_id` → `users.id` (nullable, غير unique) |
 | 2 | المستخدم **يعمل في** صالة (كموظف) | **Many To One** | `users.station_id` → `stations.id` (nullable) |
 | 3 | المستخدم **ينفّذ** عدة حجوزات | **One To Many** | `bookings.user_id` → `users.id` |
 | 4 | المستخدم **يملك** عدة رموز Push | **One To Many** | `device_tokens.user_id` → `users.id` CASCADE |
@@ -39,7 +39,7 @@
 | 13 | المستخدم **يدفع** عدة دفعات | **One To Many** | `payments.user_id` → `users.id` |
 | 14 | المستخدم **يُبلّغ عن** عدة أعطال | **One To Many** | `device_faults.reported_by` → `users.id` |
 | 15 | المستخدم **ينشئ** عدة مصروفات | **One To Many** | `hall_expenses.created_by` → `users.id` |
-| 16 | المستخدم **ينشئ** عدة بثوث | **One To Many** | `station_broadcasts.created_by` → `users.id` CASCADE |
+| 16 | المستخدم **ينشئ** عدة تنبيهات | **One To Many** | `station_alerts.created_by` → `users.id` CASCADE |
 | 17 | المستخدم **ينشئ** عدة إيقافات حجز | **One To Many** | `station_booking_stops.created_by` → `users.id` |
 | 18 | المستخدم **يُدعى عبر** عدة دعوات | **One To Many** | `invitations.invited_by` → `users.id` CASCADE |
 | 19 | المستخدم **يُربط بـ** عدة أدوار | **Many To Many** | عبر `model_has_roles` (Spatie) |
@@ -62,7 +62,7 @@
 | 9 | الصالة **تُسجّل** عدة مصروفات | **One To Many** | `hall_expenses.station_id` → `stations.id` CASCADE |
 | 10 | الصالة **تُسجّل** عدة أعطال | **One To Many** | `device_faults.station_id` → `stations.id` CASCADE |
 | 11 | الصالة **تُوقف** الحجز عدة مرات | **One To Many** | `station_booking_stops.station_id` → `stations.id` CASCADE |
-| 12 | الصالة **تُبث** عدة رسائل إدارية | **One To Many** | `station_broadcasts.station_id` → `stations.id` CASCADE |
+| 12 | الصالة **تُصدِر** عدة تنبيهات إدارية | **One To Many** | `station_alerts.station_id` → `stations.id` CASCADE |
 | 13 | الصالة **ترتبط بـ** عدة خدمات | **Many To Many** | عبر `service_station` |
 | 14 | الصالة **تُنشأ من** طلب انضمام | **One To One** | `hall_join_requests.station_id` → `stations.id` (nullable) |
 | 15 | الصالة **تُربط بـ** عدة دعوات | **One To Many** | `invitations.station_id` → `stations.id` |
@@ -181,8 +181,8 @@
 
 | # | العلاقة | النوع | التفاصيل التقنية |
 |---|---------|-------|------------------|
-| 1 | البث **ينتمي إلى** صالة | **Many To One** | `station_broadcasts.station_id` → `stations.id` CASCADE |
-| 2 | البث **يُنشئ** عدة إشعارات موظف | **One To Many** | `staff_notifications.broadcast_id` → `station_broadcasts.id` CASCADE |
+| 1 | التنبيه **ينتمي إلى** صالة | **Many To One** | `station_alerts.station_id` → `stations.id` CASCADE |
+| 2 | التنبيه **يُنشئ** عدة إشعارات موظف | **One To Many** | `staff_notifications.station_alert_id` → `station_alerts.id` CASCADE |
 | 3 | إشعار الموظف **يُوجَّه إلى** مستخدم | **Many To One** | `staff_notifications.user_id` → `users.id` CASCADE |
 | 4 | إشعار العميل **يُوجَّه إلى** مستخدم | **Many To One** | `customer_notifications.user_id` → `users.id` CASCADE |
 
@@ -192,7 +192,7 @@
 
 | # | العلاقة | النوع | التفاصيل التقنية |
 |---|---------|-------|------------------|
-| 1 | طلب الانضمام **ينتج عنه** صالة (عند القبول) | **One To One** | `hall_join_requests.station_id` → `stations.id` |
+| 1 | طلب الانضمام **يرتبط بـ** صالة (عند القبول) | **Many To One** | `hall_join_requests.station_id` → `stations.id` |
 | 2 | الدعوة **ترتبط بـ** طلب انضمام | **Many To One** | `invitations.hall_join_request_id` → `hall_join_requests.id` |
 | 3 | الدعوة **ترتبط بـ** صالة | **Many To One** | `invitations.station_id` → `stations.id` |
 | 4 | الدعوة **يُرسلها** مستخدم (أدمن) | **Many To One** | `invitations.invited_by` → `users.id` CASCADE |
@@ -215,9 +215,9 @@
 | # | الكيان A | الكيان B | التفاصيل |
 |---|----------|----------|----------|
 | 1 | **الحجز** | **الدفعة** | `payments.booking_id` UNIQUE → `bookings.id` |
-| 2 | **عطل الجهاز** | **مصروف الصالة** | `hall_expenses.device_fault_id` UNIQUE → `device_faults.id` |
-| 3 | **المستخدم (مدير)** | **الصالة المُدارة** | `stations.manager_id` → `users.id` (منطقياً 1:1) |
-| 4 | **طلب الانضمام (مقبول)** | **الصالة** | `hall_join_requests.station_id` (منطقياً 1:1) |
+| 2 | **عطل الجهاز** | **مصروف الصالة** | `hall_expenses.device_fault_id` UNIQUE → `device_faults.id` (اختياري) |
+| 3 | **المستخدم (مدير)** | **الصالات المُدارة** | `stations.manager_id` → `users.id` (1:N — غير مقيد unique) |
+| 4 | **طلب الانضمام (مقبول)** | **الصالة** | `hall_join_requests.station_id` (N:1) |
 
 ---
 

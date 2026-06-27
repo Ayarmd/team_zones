@@ -6,7 +6,7 @@ use App\Models\CustomerNotification;
 use App\Models\DeviceToken;
 use App\Models\StaffNotification;
 use App\Models\Station;
-use App\Models\StationBroadcast;
+use App\Models\StationAlert;
 use App\Models\User;
 use App\Support\NotificationTargetAudience;
 use Illuminate\Support\Collection;
@@ -17,7 +17,7 @@ use Throwable;
 class NotificationTargetingService
 {
     public function __construct(
-        private readonly FcmBroadcastService $fcm,
+        private readonly FcmPushService $fcm,
     ) {}
 
     /**
@@ -32,37 +32,37 @@ class NotificationTargetingService
      *     fcm_reason: string|null
      * }
      */
-    public function dispatchBroadcast(StationBroadcast $broadcast): array
+    public function dispatchStationAlert(StationAlert $alert): array
     {
-        Log::info('broadcast.dispatch.start', [
-            'broadcast_id' => $broadcast->id,
-            'station_id' => $broadcast->station_id,
-            'target_audience' => $broadcast->target_audience,
+        Log::info('station_alert.dispatch.start', [
+            'station_alert_id' => $alert->id,
+            'station_id' => $alert->station_id,
+            'target_audience' => $alert->target_audience,
         ]);
 
         try {
-            $users = $this->resolveRecipients($broadcast->station, $broadcast->target_audience);
+            $users = $this->resolveRecipients($alert->station, $alert->target_audience);
 
             $payload = [
-                'broadcast_id' => $broadcast->id,
-                'station_id' => $broadcast->station_id,
-                'station_name' => $broadcast->station?->name,
-                'severity' => $broadcast->severity,
-                'target_audience' => $broadcast->target_audience,
-                'alternative_instructions' => $broadcast->alternative_instructions,
+                'station_alert_id' => $alert->id,
+                'station_id' => $alert->station_id,
+                'station_name' => $alert->station?->name,
+                'severity' => $alert->severity,
+                'target_audience' => $alert->target_audience,
+                'alternative_instructions' => $alert->alternative_instructions,
             ];
 
             $customerCount = 0;
             $staffCount = 0;
 
-            DB::transaction(function () use ($broadcast, $users, $payload, &$customerCount, &$staffCount) {
+            DB::transaction(function () use ($alert, $users, $payload, &$customerCount, &$staffCount) {
                 foreach ($users as $user) {
                     if ($user->hasRole('customer')) {
                         CustomerNotification::create([
                             'user_id' => $user->id,
-                            'type' => 'manager_broadcast',
-                            'title' => $broadcast->name,
-                            'body' => $broadcast->body,
+                            'type' => 'station_alert',
+                            'title' => $alert->name,
+                            'body' => $alert->body,
                             'payload' => $payload,
                         ]);
                         $customerCount++;
@@ -71,11 +71,11 @@ class NotificationTargetingService
                     if ($user->hasAnyRole(['reception', 'maintenance', 'manager'])) {
                         StaffNotification::create([
                             'user_id' => $user->id,
-                            'station_id' => $broadcast->station_id,
-                            'broadcast_id' => $broadcast->id,
-                            'type' => 'manager_broadcast',
-                            'title' => $broadcast->name,
-                            'body' => $broadcast->body,
+                            'station_id' => $alert->station_id,
+                            'station_alert_id' => $alert->id,
+                            'type' => 'station_alert',
+                            'title' => $alert->name,
+                            'body' => $alert->body,
                             'payload' => $payload,
                         ]);
                         $staffCount++;
@@ -99,8 +99,8 @@ class NotificationTargetingService
                 ->values()
                 ->all();
 
-            Log::info('broadcast.dispatch.tokens', [
-                'broadcast_id' => $broadcast->id,
+            Log::info('station_alert.dispatch.tokens', [
+                'station_alert_id' => $alert->id,
                 'recipient_user_ids' => $userIds->take(20)->values()->all(),
                 'users_with_tokens' => $tokenRows->pluck('user_id')->unique()->count(),
                 'valid_token_count' => count($tokens),
@@ -110,17 +110,17 @@ class NotificationTargetingService
             $fcmResult = ['sent' => 0, 'failed' => 0, 'skipped' => count($tokens), 'reason' => 'no_tokens'];
 
             if ($tokens !== []) {
-                $fcmResult = $this->fcm->sendToTokens($tokens, $broadcast->name, $broadcast->body, [
-                    'type' => 'manager_broadcast',
-                    'broadcast_id' => (string) $broadcast->id,
-                    'station_id' => (string) $broadcast->station_id,
-                    'severity' => $broadcast->severity,
+                $fcmResult = $this->fcm->sendToTokens($tokens, $alert->name, $alert->body, [
+                    'type' => 'station_alert',
+                    'station_alert_id' => (string) $alert->id,
+                    'station_id' => (string) $alert->station_id,
+                    'severity' => $alert->severity,
                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
                 ]);
             }
 
-            Log::info('broadcast.dispatch.complete', [
-                'broadcast_id' => $broadcast->id,
+            Log::info('station_alert.dispatch.complete', [
+                'station_alert_id' => $alert->id,
                 'recipients' => $users->count(),
                 'customer_notifications' => $customerCount,
                 'staff_notifications' => $staffCount,
@@ -138,10 +138,10 @@ class NotificationTargetingService
                 'fcm_reason' => $fcmResult['reason'] ?? null,
             ];
         } catch (Throwable $e) {
-            Log::error('broadcast.dispatch.failed', [
-                'broadcast_id' => $broadcast->id,
-                'station_id' => $broadcast->station_id,
-                'target_audience' => $broadcast->target_audience,
+            Log::error('station_alert.dispatch.failed', [
+                'station_alert_id' => $alert->id,
+                'station_id' => $alert->station_id,
+                'target_audience' => $alert->target_audience,
                 'error' => $e->getMessage(),
             ]);
 
@@ -158,7 +158,7 @@ class NotificationTargetingService
         $roles = NotificationTargetAudience::rolesFor($normalizedAudience);
         $users = collect();
 
-        Log::info('broadcast.resolve_recipients.start', [
+        Log::info('station_alert.resolve_recipients.start', [
             'target_audience' => $targetAudience,
             'normalized_audience' => $normalizedAudience,
             'roles' => $roles,
@@ -172,7 +172,7 @@ class NotificationTargetingService
                 $query->where('station_id', $station->id);
             }
 
-            Log::info('broadcast.resolve_recipients.role_query', [
+            Log::info('station_alert.resolve_recipients.role_query', [
                 'role' => $role,
                 'sql' => $query->toSql(),
                 'bindings' => $query->getBindings(),
@@ -185,7 +185,7 @@ class NotificationTargetingService
 
         $unique = $users->unique('id')->values();
 
-        Log::info('broadcast.resolve_recipients.complete', [
+        Log::info('station_alert.resolve_recipients.complete', [
             'target_audience' => $normalizedAudience,
             'total_recipients' => $unique->count(),
             'sample_user_ids' => $unique->take(20)->pluck('id')->all(),

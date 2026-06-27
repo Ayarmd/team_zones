@@ -32,11 +32,11 @@ import {
   archiveManagerAlert,
   archiveManagerAlerts,
   createManagerAlert,
-} from "../utils/broadcastWorkflow";
+} from "../utils/alertWorkflow";
 import {
-  fetchManagerBroadcasts,
-  MANAGER_BROADCASTS_ARCHIVED_EVENT,
-} from "../data/managerBroadcastsApi";
+  fetchManagerAlerts,
+  MANAGER_ALERTS_ARCHIVED_EVENT,
+} from "../data/managerAlertsApi";
 import { getActiveStaffSession, isApiStaffSession } from "../../devices-packages/data/hallCatalogSync";
 import ManagerAlertDetailsModal from "../components/ManagerAlertDetailsModal";
 import ManagerAlertFormModal from "../components/ManagerAlertFormModal";
@@ -56,9 +56,9 @@ export default function ManagerAlertsLogPage() {
   const refresh = useCallback(async () => {
     const session = getActiveStaffSession();
     if (isApiStaffSession(session) && session.role === "manager") {
-      const result = await fetchManagerBroadcasts({ status: "active" });
+      const result = await fetchManagerAlerts({ status: "active" });
       if (result.ok) {
-        setAlerts(result.broadcasts);
+        setAlerts(result.alerts);
         return;
       }
     }
@@ -68,11 +68,11 @@ export default function ManagerAlertsLogPage() {
   useEffect(() => {
     refresh();
     window.addEventListener(MANAGER_ALERTS_EVENT, refresh);
-    window.addEventListener(MANAGER_BROADCASTS_ARCHIVED_EVENT, refresh);
+    window.addEventListener(MANAGER_ALERTS_ARCHIVED_EVENT, refresh);
     window.addEventListener("focus", refresh);
     return () => {
       window.removeEventListener(MANAGER_ALERTS_EVENT, refresh);
-      window.removeEventListener(MANAGER_BROADCASTS_ARCHIVED_EVENT, refresh);
+      window.removeEventListener(MANAGER_ALERTS_ARCHIVED_EVENT, refresh);
       window.removeEventListener("focus", refresh);
     };
   }, [refresh]);
@@ -149,9 +149,9 @@ export default function ManagerAlertsLogPage() {
     setArchiving(targetIds, false);
 
     const archivedIds = isBulk
-      ? (result.broadcasts || []).map((row) => row.id)
-      : result.ok && result.broadcast
-        ? [result.broadcast.id]
+      ? (result.alerts || []).map((row) => row.id)
+      : result.ok && result.alert
+        ? [result.alert.id]
         : [];
 
     if (!archivedIds.length) return;

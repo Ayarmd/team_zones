@@ -58,7 +58,7 @@ npm run pdf:attributes
 | 15 | عطل الجهاز | `device_faults` | 15 |
 | 16 | مصروف الصالة | `hall_expenses` | 13 |
 | 17 | إيقاف الحجز | `station_booking_stops` | 10 |
-| 18 | البث الإداري | `station_broadcasts` | 13 |
+| 18 | تنبيهات الصالة | `station_alerts` | 13 |
 | 19 | إشعار الموظف | `staff_notifications` | 11 |
 | 20 | إشعار العميل | `customer_notifications` | 9 |
 | 21 | الدفعة | `payments` | 10 |

@@ -420,32 +420,33 @@ class AppStateProvider extends ChangeNotifier {
 
         final isMaintenanceCancel =
             notification.type == 'booking_cancelled_maintenance';
-        final isManagerBroadcast = notification.type == 'manager_broadcast';
+        final isStationAlert = notification.type == 'station_alert' ||
+            notification.type == 'manager_broadcast';
         final cancelledBookingId = notification.payload?['booking_number']?.toString();
 
         pushNotification(
           AppNotification(
             id: isMaintenanceCancel
                 ? 'booking-cancel-${notification.id}'
-                : isManagerBroadcast
-                    ? 'broadcast-${notification.id}'
+                : isStationAlert
+                    ? 'station-alert-${notification.id}'
                     : 'loyalty-${notification.id}',
             title: notification.title,
             body: notification.body,
             createdAt: notification.createdAt ?? DateTime.now(),
             icon: isMaintenanceCancel
                 ? Icons.build_circle_outlined
-                : isManagerBroadcast
+                : isStationAlert
                     ? Icons.campaign_outlined
                     : Icons.card_giftcard,
             color: isMaintenanceCancel
                 ? const Color(0xFFD97706)
-                : isManagerBroadcast
+                : isStationAlert
                     ? const Color(0xFF6B5478)
                     : const Color(0xFF6B5478),
             type: isMaintenanceCancel
                 ? NotificationType.bookingCancelled
-                : isManagerBroadcast
+                : isStationAlert
                     ? NotificationType.general
                     : NotificationType.reward,
             bookingId: isMaintenanceCancel ? cancelledBookingId : null,

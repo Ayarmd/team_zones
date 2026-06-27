@@ -23,9 +23,9 @@ import {
   MANAGER_ALERTS_EVENT,
 } from "../data/managerAlertsStorage";
 import {
-  fetchArchivedManagerBroadcasts,
-  MANAGER_BROADCASTS_ARCHIVED_EVENT,
-} from "../data/managerBroadcastsApi";
+  fetchArchivedManagerAlerts,
+  MANAGER_ALERTS_ARCHIVED_EVENT,
+} from "../data/managerAlertsApi";
 import { getActiveStaffSession, isApiStaffSession } from "../../devices-packages/data/hallCatalogSync";
 import ManagerAlertDetailsModal from "../components/ManagerAlertDetailsModal";
 
@@ -40,9 +40,9 @@ export default function ManagerAlertsArchivePage() {
   const refresh = useCallback(async () => {
     const session = getActiveStaffSession();
     if (isApiStaffSession(session) && session.role === "manager") {
-      const result = await fetchArchivedManagerBroadcasts();
+      const result = await fetchArchivedManagerAlerts();
       if (result.ok) {
-        setAlerts(result.broadcasts);
+        setAlerts(result.alerts);
         return;
       }
     }
@@ -52,11 +52,11 @@ export default function ManagerAlertsArchivePage() {
   useEffect(() => {
     refresh();
     window.addEventListener(MANAGER_ALERTS_EVENT, refresh);
-    window.addEventListener(MANAGER_BROADCASTS_ARCHIVED_EVENT, refresh);
+    window.addEventListener(MANAGER_ALERTS_ARCHIVED_EVENT, refresh);
     window.addEventListener("focus", refresh);
     return () => {
       window.removeEventListener(MANAGER_ALERTS_EVENT, refresh);
-      window.removeEventListener(MANAGER_BROADCASTS_ARCHIVED_EVENT, refresh);
+      window.removeEventListener(MANAGER_ALERTS_ARCHIVED_EVENT, refresh);
       window.removeEventListener("focus", refresh);
     };
   }, [refresh]);

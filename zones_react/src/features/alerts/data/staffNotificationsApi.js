@@ -4,7 +4,7 @@ function mapStaffNotification(row) {
   const createdAt = row.createdAt ?? row.created_at ?? "";
   return {
     id: row.id,
-    type: row.type || "manager_broadcast",
+    type: row.type || "station_alert",
     severity: row.severity || row.payload?.severity || "medium",
     name: row.title || row.name || "",
     message: row.message || row.body || "",

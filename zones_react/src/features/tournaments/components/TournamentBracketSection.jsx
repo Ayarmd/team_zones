@@ -43,7 +43,7 @@ export default function TournamentBracketSection({ routes, readOnly = false }) {
   const skeletonSize = tournament?.participants ?? 8;
 
   const [notifyBusy, setNotifyBusy] = useState(false);
-  const [broadcastNotice, setBroadcastNotice] = useState("");
+  const [winnerPushNotice, setWinnerPushNotice] = useState("");
 
   const finalMatchHasWinner = useMemo(() => {
     if (!bracket?.rounds?.length) return false;
@@ -55,14 +55,14 @@ export default function TournamentBracketSection({ routes, readOnly = false }) {
   const resendWinnerNotification = async () => {
     if (!tournament?.id || notifyBusy) return;
     setNotifyBusy(true);
-    setBroadcastNotice("");
+    setWinnerPushNotice("");
     const result = await notifyTournamentWinner(tournament.id);
     setNotifyBusy(false);
     if (!result.ok) {
-      setBroadcastNotice(result.error || "تعذر إرسال الإشعار.");
+      setWinnerPushNotice(result.error || "تعذر إرسال الإشعار.");
       return;
     }
-    setBroadcastNotice(result.message || "تم إرسال إشعار الفوز لجميع مستخدمي التطبيق.");
+    setWinnerPushNotice(result.message || "تم إرسال إشعار الفوز لجميع مستخدمي التطبيق.");
   };
 
   const goBack = () => {
@@ -135,9 +135,9 @@ export default function TournamentBracketSection({ routes, readOnly = false }) {
       <section className="space-y-4">
         {tournament ? <TournamentBreadcrumb tournamentName={tournament.name} view="bracket" /> : null}
 
-        {broadcastNotice ? (
+        {winnerPushNotice ? (
           <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300">
-            {broadcastNotice}
+            {winnerPushNotice}
           </p>
         ) : null}
 

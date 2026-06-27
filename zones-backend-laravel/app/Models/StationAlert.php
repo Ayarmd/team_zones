@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class StationBroadcast extends Model
+class StationAlert extends Model
 {
+    protected $table = 'station_alerts';
+
     protected $fillable = [
         'station_id',
         'created_by',
@@ -41,7 +43,7 @@ class StationBroadcast extends Model
 
     public function staffNotifications(): HasMany
     {
-        return $this->hasMany(StaffNotification::class, 'broadcast_id');
+        return $this->hasMany(StaffNotification::class, 'station_alert_id');
     }
 
     public function isActive(): bool

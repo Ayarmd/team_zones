@@ -40,7 +40,7 @@ use App\Http\Controllers\Api\SuperAdminStaffController;
 use App\Http\Controllers\Api\StaffAuthController;
 use App\Http\Controllers\Api\ManagerTournamentController;
 use App\Http\Controllers\Api\ManagerTournamentBracketController;
-use App\Http\Controllers\Api\ManagerBroadcastController;
+use App\Http\Controllers\Api\ManagerAlertController;
 use App\Http\Controllers\Api\StaffNotificationController;
 use App\Http\Controllers\Api\TournamentController;
 Route::post('/register', [AuthController::class, 'register']);
@@ -144,13 +144,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/manager/offers/{offer}', [ManagerOfferController::class, 'destroy'])
         ->middleware('role:manager');
 
-    Route::get('/manager/broadcasts', [ManagerBroadcastController::class, 'index'])
+    Route::get('/manager/alerts', [ManagerAlertController::class, 'index'])
         ->middleware('role:manager');
-    Route::post('/manager/broadcasts', [ManagerBroadcastController::class, 'store'])
+    Route::post('/manager/alerts', [ManagerAlertController::class, 'store'])
         ->middleware('role:manager');
-    Route::post('/manager/broadcasts/{broadcast}/stop', [ManagerBroadcastController::class, 'stop'])
+    Route::post('/manager/alerts/{alert}/stop', [ManagerAlertController::class, 'stop'])
         ->middleware('role:manager');
-    Route::patch('/manager/broadcasts/{broadcast}/archive', [ManagerBroadcastController::class, 'archive'])
+    Route::patch('/manager/alerts/{alert}/archive', [ManagerAlertController::class, 'archive'])
         ->middleware('role:manager');
 
     Route::get('/manager/booking-stops/reasons', [ManagerBookingStopController::class, 'reasons'])

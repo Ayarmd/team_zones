@@ -19,8 +19,16 @@ export const NOTIFICATION_TYPE_META = {
     readClass: "bg-gray-50/40 border-transparent dark:bg-gray-800/30",
     iconClass: "text-[#6B5478] dark:text-[#c4b5d0]",
   },
+  station_alert: {
+    label: "تنبيه الصالة",
+    Icon: Megaphone,
+    unreadClass: "bg-[#6B5478]/10 border-[#6B5478]/20 dark:bg-[#6B5478]/15 dark:border-[#6B5478]/25",
+    readClass: "bg-gray-50/40 border-transparent dark:bg-gray-800/30",
+    iconClass: "text-[#6B5478] dark:text-[#c4b5d0]",
+  },
+  /** @deprecated legacy API type — maps to station_alert */
   manager_broadcast: {
-    label: "بث إداري",
+    label: "تنبيه الصالة",
     Icon: Megaphone,
     unreadClass: "bg-[#6B5478]/10 border-[#6B5478]/20 dark:bg-[#6B5478]/15 dark:border-[#6B5478]/25",
     readClass: "bg-gray-50/40 border-transparent dark:bg-gray-800/30",

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('station_broadcasts', function (Blueprint $table) {
+        Schema::create('station_alerts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('station_id')->constrained()->cascadeOnDelete();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('station_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('broadcast_id')->nullable()->constrained('station_broadcasts')->cascadeOnDelete();
+            $table->foreignId('station_alert_id')->nullable()->constrained('station_alerts')->cascadeOnDelete();
             $table->string('type', 64);
             $table->string('title');
             $table->text('body');
@@ -44,6 +44,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('staff_notifications');
-        Schema::dropIfExists('station_broadcasts');
+        Schema::dropIfExists('station_alerts');
     }
 };

@@ -518,12 +518,12 @@
 
 ---
 
-## 18. البث الإداري — `station_broadcasts`
+## 18. تنبيهات الصالة — `station_alerts`
 
 ```
         ┌─────────────────────────┐
-        │     البث الإداري         │
-        │  (station_broadcasts)   │
+        │     تنبيهات الصالة       │
+        │    (station_alerts)     │
         └────────────┬────────────┘
                      │
   ○ id (PK) ─────────┼──── ○ station_id (FK)
@@ -550,7 +550,7 @@
                      │
   ○ id (PK) ─────────┼──── ○ user_id (FK)
                      │
-  ○ station_id ──────┼──── ○ broadcast_id (FK, NULL)
+  ○ station_id ──────┼──── ○ station_alert_id (FK, NULL)
                      │
   ○ type / title / body ── ○ payload (JSON, NULL)
                      │

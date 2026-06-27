@@ -1,8 +1,8 @@
 import { apiClient, mapApiErrorMessage } from "../../../shared/api/apiClient";
 
-export const MANAGER_BROADCASTS_ARCHIVED_EVENT = "zones-manager-broadcasts-archived";
+export const MANAGER_ALERTS_ARCHIVED_EVENT = "zones-manager-alerts-archived";
 
-function mapBroadcast(row) {
+function mapStationAlert(row) {
   const isArchived = row.isArchived ?? row.is_archived ?? row.status === "stopped";
   return {
     id: row.id,
@@ -20,31 +20,31 @@ function mapBroadcast(row) {
   };
 }
 
-export function emitBroadcastsArchived(archivedBroadcasts = []) {
+export function emitAlertsArchived(archivedAlerts = []) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent(MANAGER_BROADCASTS_ARCHIVED_EVENT, {
-      detail: { broadcasts: archivedBroadcasts },
+    new CustomEvent(MANAGER_ALERTS_ARCHIVED_EVENT, {
+      detail: { alerts: archivedAlerts },
     }),
   );
 }
 
-export async function fetchManagerBroadcasts({ status = "active" } = {}) {
+export async function fetchManagerAlerts({ status = "active" } = {}) {
   try {
-    const { data } = await apiClient.get("/manager/broadcasts", { params: { status } });
-    return { ok: true, broadcasts: (data.broadcasts || []).map(mapBroadcast) };
+    const { data } = await apiClient.get("/manager/alerts", { params: { status } });
+    return { ok: true, alerts: (data.alerts || []).map(mapStationAlert) };
   } catch (error) {
-    return { ok: false, error: mapApiErrorMessage(error), broadcasts: [] };
+    return { ok: false, error: mapApiErrorMessage(error), alerts: [] };
   }
 }
 
-export async function fetchArchivedManagerBroadcasts() {
-  return fetchManagerBroadcasts({ status: "stopped" });
+export async function fetchArchivedManagerAlerts() {
+  return fetchManagerAlerts({ status: "stopped" });
 }
 
-export async function createManagerBroadcast(payload) {
+export async function createManagerStationAlert(payload) {
   try {
-    const { data } = await apiClient.post("/manager/broadcasts", {
+    const { data } = await apiClient.post("/manager/alerts", {
       name: payload.name,
       situation_description: payload.situationDescription || payload.message || "",
       target_audience: payload.targetAudience || "customers_only",
@@ -53,7 +53,7 @@ export async function createManagerBroadcast(payload) {
     });
     return {
       ok: true,
-      broadcast: mapBroadcast(data.broadcast),
+      alert: mapStationAlert(data.alert),
       delivery: data.delivery,
       message: data.message,
     };
@@ -62,19 +62,14 @@ export async function createManagerBroadcast(payload) {
   }
 }
 
-export async function archiveManagerBroadcast(broadcastId) {
+export async function archiveManagerStationAlert(alertId) {
   try {
-    const { data } = await apiClient.patch(`/manager/broadcasts/${broadcastId}/archive`);
-    const broadcast = mapBroadcast(data.broadcast);
-    return { ok: true, broadcast, message: data.message };
+    const { data } = await apiClient.patch(`/manager/alerts/${alertId}/archive`);
+    const alert = mapStationAlert(data.alert);
+    return { ok: true, alert, message: data.message };
   } catch (error) {
     return { ok: false, error: mapApiErrorMessage(error) };
   }
 }
 
-/** @deprecated استخدم archiveManagerBroadcast */
-export async function stopManagerBroadcast(broadcastId) {
-  return archiveManagerBroadcast(broadcastId);
-}
-
-export { mapBroadcast };
+export { mapStationAlert };
