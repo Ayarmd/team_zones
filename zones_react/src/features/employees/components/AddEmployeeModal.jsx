@@ -3,24 +3,27 @@ import { createPortal } from "react-dom";
 import { Mail, Settings2 } from "lucide-react";
 import RoleToggleGroup from "./RoleToggleGroup";
 import ShiftToggleGroup from "./ShiftToggleGroup";
-import { savePendingInvite } from "../data/pendingInviteStorage";
-import { useZonesToast } from "../../../shared/context/ZonesToastContext";
+import { sendEmployeeInvitation } from "../data/employeeInvitationsApi";
+import { zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
 import "./EmployeeModals.css";
 
 export default function AddEmployeeModal({ open, onClose, onOpenAdmin }) {
-  const { showInviteSentToast } = useZonesToast();
   const [step, setStep] = useState("choice");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("reception");
   const [shift, setShift] = useState("morning");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setStep("choice");
+    setName("");
     setEmail("");
     setRole("reception");
     setShift("morning");
     setError("");
+    setSubmitting(false);
   };
 
   const handleClose = () => {
@@ -28,15 +31,34 @@ export default function AddEmployeeModal({ open, onClose, onOpenAdmin }) {
     onClose();
   };
 
-  const sendInvite = () => {
+  const sendInvite = async () => {
     setError("");
+    const trimmedName = name.trim();
     const trimmed = email.trim();
+    if (!trimmedName) {
+      setError("يرجى إدخال اسم الموظف.");
+      return;
+    }
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError("يرجى إدخال بريد إلكتروني صحيح.");
       return;
     }
-    savePendingInvite({ email: trimmed, role, shift });
-    showInviteSentToast();
+
+    setSubmitting(true);
+    const result = await sendEmployeeInvitation({
+      name: trimmedName,
+      email: trimmed,
+      role,
+      shift,
+    });
+    setSubmitting(false);
+
+    if (!result.ok) {
+      setError(result.error || "تعذر إرسال الدعوة.");
+      return;
+    }
+
+    zonesToastSuccess(result.message || "تم إرسال الدعوة إلى البريد الإلكتروني.");
     handleClose();
   };
 
@@ -82,7 +104,17 @@ export default function AddEmployeeModal({ open, onClose, onOpenAdmin }) {
         ) : (
           <>
             <h2 className="emp-modal__title">إرسال دعوة</h2>
-            <p className="emp-modal__subtitle">أدخل بريد الموظف لإنشاء رابط التسجيل</p>
+            <p className="emp-modal__subtitle">أدخل بيانات الموظف — يصله رابط لإكمال التسجيل</p>
+            <div className="emp-modal__field">
+              <label htmlFor="invite-name">اسم الموظف</label>
+              <input
+                id="invite-name"
+                type="text"
+                placeholder="الاسم الكامل"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div className="emp-modal__field">
               <label htmlFor="invite-email">البريد الإلكتروني</label>
               <input
@@ -107,8 +139,13 @@ export default function AddEmployeeModal({ open, onClose, onOpenAdmin }) {
               <button type="button" className="emp-modal__btn emp-modal__btn--ghost" onClick={() => setStep("choice")}>
                 رجوع
               </button>
-              <button type="button" className="emp-modal__btn emp-modal__btn--primary" onClick={sendInvite}>
-                إرسال الدعوة
+              <button
+                type="button"
+                className="emp-modal__btn emp-modal__btn--primary"
+                onClick={sendInvite}
+                disabled={submitting}
+              >
+                {submitting ? "جاري الإرسال..." : "إرسال الدعوة"}
               </button>
             </div>
           </>

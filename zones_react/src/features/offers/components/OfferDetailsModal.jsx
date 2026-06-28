@@ -95,7 +95,7 @@ export default function OfferDetailsModal({ open, mode = "add", offer, onClose, 
     if (!open || isAdd || !offer?.id) return;
 
     const refreshStats = () =>
-        setUsageCount(offer.usageCount ?? getOfferUsageCount(offer.id));
+        setUsageCount(offer.usageCount ?? getOfferUsageCount(offer.id, offer));
     refreshStats();
     window.addEventListener(OFFER_BOOKINGS_EVENT, refreshStats);
     return () => window.removeEventListener(OFFER_BOOKINGS_EVENT, refreshStats);

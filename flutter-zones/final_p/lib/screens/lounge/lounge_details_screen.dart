@@ -9,6 +9,7 @@ import '../../data/repositories/lounge_catalog_repository.dart';
 import '../../models/booking_stop_status.dart';
 import '../../models/lounge_model.dart';
 import '../../providers/lounge_ratings_provider.dart';
+import '../../providers/app_state_provider.dart';
 import '../../widgets/circuit_background.dart';
 import '../../widgets/zonez_screen.dart';
 import '../../widgets/glass_container.dart';
@@ -180,7 +181,10 @@ class _LoungeDetailsScreenState extends State<LoungeDetailsScreen> {
                 _BookingActionSection(
                   lounge: lounge,
                   bookingStop: _liveBookingStop ?? lounge.bookingStop,
-                  bookingsBlocked: lounge.bookingsBlocked || _liveBookingStop != null,
+                  bookingsBlocked: lounge.bookingsBlocked ||
+                      _liveBookingStop != null ||
+                      context.watch<AppStateProvider>().isCustomerBookingBanned,
+                  banMessage: context.watch<AppStateProvider>().customerBanMessage,
                 ),
               ],
             ),
@@ -197,18 +201,20 @@ class _BookingActionSection extends StatelessWidget {
     required this.lounge,
     required this.bookingStop,
     required this.bookingsBlocked,
+    this.banMessage,
   });
 
   final LoungeModel lounge;
   final BookingStopStatus? bookingStop;
   final bool bookingsBlocked;
+  final String? banMessage;
 
   @override
   Widget build(BuildContext context) {
     if (bookingsBlocked) {
       return BookingBlockedButton(
-        label: bookingStop?.buttonLabel ?? 'الحجز غير متاح مؤقتاً',
-        message: bookingStop?.message,
+        label: banMessage != null ? 'حجز جديد' : (bookingStop?.buttonLabel ?? 'الحجز غير متاح مؤقتاً'),
+        message: banMessage ?? bookingStop?.message,
       );
     }
 

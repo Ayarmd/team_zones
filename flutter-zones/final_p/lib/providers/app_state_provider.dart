@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' show Color, Icons;
 
 
 import '../data/repositories/booking_repository.dart';
+import '../data/repositories/customer_ban_repository.dart';
+import '../models/customer_ban_status.dart';
 import '../data/repositories/loyalty_repository.dart';
 import '../models/booking.dart';
 import '../models/loyalty_status.dart';
@@ -32,6 +34,8 @@ class AppStateProvider extends ChangeNotifier {
   int bottomNavIndex = 0;
 
   LoyaltyStatus? loyaltyStatus;
+
+  CustomerBanStatus customerBan = CustomerBanStatus.none;
 
   final Set<int> _processedLoyaltyNotificationIds = {};
 
@@ -92,9 +96,27 @@ class AppStateProvider extends ChangeNotifier {
 
   bool get loyaltyRewardUnlocked => loyaltyStatus?.rewardUnlocked ?? false;
 
+  bool get isCustomerBookingBanned => customerBan.isBanned;
+
+  String? get customerBanMessage => customerBan.message;
+
   void applyLoyaltyStatus(LoyaltyStatus status) {
     loyaltyStatus = status;
     notifyListeners();
+  }
+
+  void applyCustomerBanStatus(CustomerBanStatus status) {
+    customerBan = status;
+    notifyListeners();
+  }
+
+  Future<void> syncBanStatusFromApi() async {
+    try {
+      final status = await CustomerBanRepository.instance.fetchStatus();
+      applyCustomerBanStatus(status);
+    } catch (_) {
+      // Keep last known ban state when offline.
+    }
   }
 
   void resetLoyaltyPointsAfterRedemption() {
@@ -633,83 +655,31 @@ class AppStateProvider extends ChangeNotifier {
 
 
 
-  void autoCancelBooking(String bookingId) {
-
+  Future<void> checkInBooking(String bookingId) async {
     final index = _currentBookings.indexWhere((b) => b.id == bookingId);
-
     if (index == -1) return;
 
-
-
     final booking = _currentBookings.removeAt(index).copyWith(
-
-          status: BookingStatus.cancelled,
-
+          status: BookingStatus.past,
+          checkedIn: true,
         );
-
     _pastBookings.insert(0, booking);
-
     notifyListeners();
 
-  }
-
-
-
-  void checkInBooking(String bookingId) {
-
-    final index = _currentBookings.indexWhere((b) => b.id == bookingId);
-
-    if (index == -1) return;
-
-
-
-    const earnedPoints = 90;
-
-    final booking = _currentBookings.removeAt(index).copyWith(
-
-          status: BookingStatus.past,
-
-          checkedIn: true,
-
-          earnedPoints: earnedPoints,
-
-        );
-
-    _pastBookings.insert(0, booking);
-
-    unawaited(syncLoyaltyFromApi());
-
-
+    await syncBookingsFromApi();
 
     pushNotification(
-
       AppNotification(
-
-        id: 'points-$bookingId',
-
-        title: 'نقاط مكافأة',
-
-        body: 'النقاط المكتسبة: +$earnedPoints نقطة',
-
+        id: 'checkin-$bookingId',
+        title: 'تسجيل الحضور',
+        body: 'تم تسجيل حضورك — النقاط تُحدَّث من السيرفر بعد إنهاء الجلسة.',
         createdAt: DateTime.now(),
-
-        icon: Icons.card_giftcard,
-
-        color: const Color(0xFFFFD700),
-
-        type: NotificationType.reward,
-
+        icon: Icons.qr_code_scanner,
+        color: const Color(0xFF6B5478),
+        type: NotificationType.general,
       ),
-
     );
-
-
-
-    notifyListeners();
-
   }
-
-
 
   String? redeemReward(RewardMilestone milestone) {
 

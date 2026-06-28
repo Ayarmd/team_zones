@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import ManagerLayout from "../../../shared/layouts/ManagerLayout";
 import TablePagination from "../../../shared/components/TablePagination";
 import PageHeader from "../../super-admin/components/ui/PageHeader";
 import SearchBar from "../../super-admin/components/ui/SearchBar";
-import { RoleCycleFilter } from "../../../shared/components/StaffFilterSearchToolbar";
-import PaymentsDateFilter, { localTodayIso } from "../components/PaymentsDateFilter";
+import PaymentsDateFilter, {
+  localTodayIso,
+  shiftLocalIsoDate,
+} from "../components/PaymentsDateFilter";
 import {
   PAYMENT_METHOD_FILTERS,
   fetchManagerPayments,
@@ -80,6 +83,16 @@ export default function PaymentsPage() {
     }
   };
 
+  const handlePrevDay = () => {
+    setShowAll(false);
+    setSelectedDate((current) => shiftLocalIsoDate(current, -1));
+  };
+
+  const handleNextDay = () => {
+    setShowAll(false);
+    setSelectedDate((current) => shiftLocalIsoDate(current, 1));
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
@@ -112,32 +125,46 @@ export default function PaymentsPage() {
   }, [search, methodFilter, selectedDate, showAll]);
 
   return (
-    <>
-    <PageHeader title="المدفوعات" subtitle="سجل المعاملات المالية المكتملة" />
+    <ManagerLayout>
+      <PageHeader title="المدفوعات" subtitle="سجل المعاملات المالية المكتملة" />
 
       <section className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-5 py-3 dark:border-gray-800">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder="بحث في المدفوعات..."
-            containerClassName="min-w-[180px] flex-1 max-w-md"
-          />
+        <div className="relative z-30 border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+          <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:items-center xl:gap-5">
+            <div className="flex flex-wrap items-center gap-2">
+              {PAYMENT_METHOD_FILTERS.map((filter) => {
+                const active = methodFilter === filter.key;
+                return (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    onClick={() => setMethodFilter(filter.key)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                      active
+                        ? "bg-[#6B5478] text-white shadow-sm"
+                        : "border border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-500"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
+            </div>
 
-          <RoleCycleFilter
-            options={PAYMENT_METHOD_FILTERS.map((f) => ({ value: f.key, label: f.label }))}
-            value={methodFilter}
-            onChange={setMethodFilter}
-            ariaLabel="تصفية طريقة الدفع"
-          />
+            <div className="flex justify-center">
+              <PaymentsDateFilter
+                selectedDate={selectedDate}
+                showAll={showAll}
+                onDateChange={handleDateChange}
+                onShowAll={handleShowAllToggle}
+                onPrevDay={handlePrevDay}
+                onNextDay={handleNextDay}
+              />
+            </div>
 
-          <div className="ms-auto shrink-0">
-            <PaymentsDateFilter
-              selectedDate={selectedDate}
-              showAll={showAll}
-              onDateChange={handleDateChange}
-              onShowAll={handleShowAllToggle}
-            />
+            <div className="w-full xl:max-w-[300px] xl:justify-self-end">
+              <SearchBar value={search} onChange={setSearch} placeholder="بحث في المدفوعات..." />
+            </div>
           </div>
         </div>
 
@@ -218,6 +245,6 @@ export default function PaymentsPage() {
           />
         ) : null}
       </section>
-    </>
+    </ManagerLayout>
   );
 }

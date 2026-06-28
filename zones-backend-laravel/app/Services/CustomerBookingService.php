@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\LoyaltyService;
 use App\Services\PlatformCommissionService;
 use App\Support\BookingStatus;
+use App\Support\MediaUrl;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +23,7 @@ class CustomerBookingService
         private readonly LoyaltyService $loyalty,
         private readonly PlatformCommissionService $commission,
         private readonly BookingStopService $bookingStops,
+        private readonly CustomerBanService $customerBans,
     ) {}
 
     public function create(
@@ -56,6 +58,8 @@ class CustomerBookingService
                 'station_id' => ['الحجز غير متاح لهذه الصالة.'],
             ]);
         }
+
+        $this->customerBans->assertCanBookApp($user);
 
         if ($this->bookingStops->isDateBlocked($station, $date)) {
             $active = $this->bookingStops->activeForStation($station, \Carbon\Carbon::parse($date));
@@ -368,9 +372,7 @@ class CustomerBookingService
             'session_duration_seconds' => $booking->session_duration_seconds,
             'is_checked_in' => $booking->is_checked_in,
             'ends_at' => $booking->start_date?->format('Y-m-d').' '.$this->availability->normalizeHour((string) $booking->end_time).':00',
-            'receipt_pdf_url' => $booking->receipt_pdf_path
-                ? url('storage/'.$booking->receipt_pdf_path)
-                : null,
+            'receipt_pdf_url' => MediaUrl::resolve($booking->receipt_pdf_path),
             'created_at' => $booking->created_at?->toIso8601String(),
         ];
     }

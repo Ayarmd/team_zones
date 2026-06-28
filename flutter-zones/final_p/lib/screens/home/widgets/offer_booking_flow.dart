@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/zones_models.dart';
 import '../../../providers/zones_data_provider.dart';
+import '../../../utils/booking_guard.dart';
 import '../../offers/offer_booking_wizard_screen.dart';
 
 /// Opens the offer booking wizard when customer taps «احجز الآن».
@@ -15,6 +16,8 @@ class OfferBookingFlow {
     required String loungeName,
     required double finalPrice,
   }) {
+    if (!BookingGuard.ensureCanBook(context)) return;
+
     if (!offer.isBookable) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('هذا العرض غير جاهز للحجز حالياً')),

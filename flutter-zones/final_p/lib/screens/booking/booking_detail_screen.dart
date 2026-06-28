@@ -164,13 +164,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   NeonGradientButton(
                     label: 'محاكاة مسح QR (تسجيل الحضور)',
                     icon: Icons.qr_code_scanner,
-                    onPressed: () {
-                      context.read<AppStateProvider>().checkInBooking(booking.id);
+                    onPressed: () async {
+                      await context.read<AppStateProvider>().checkInBooking(booking.id);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'تم تسجيل الحضور! +90 نقطة',
+                              'تم تسجيل الحضور — النقاط تُحدَّث من السيرفر.',
                               style: GoogleFonts.cairo(),
                               textAlign: TextAlign.center,
                             ),

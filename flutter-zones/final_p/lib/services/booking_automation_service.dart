@@ -48,7 +48,6 @@ class BookingAutomationService {
         _syncTournamentPastStatus(appState, booking, now);
       } else {
         _checkLoungeReminder(appState, booking, now);
-        _checkNoShowCancellation(appState, booking, now);
       }
     }
   }
@@ -134,37 +133,5 @@ class BookingAutomationService {
     if (ended) {
       appState.moveTournamentBookingToPast(booking.id);
     }
-  }
-
-  void _checkNoShowCancellation(
-    AppStateProvider appState,
-    Booking booking,
-    DateTime now,
-  ) {
-    if (booking.isTournament) return;
-    if (booking.checkedIn) return;
-
-    final graceDeadline =
-        booking.startDateTime!.add(const Duration(minutes: 15));
-    if (now.isBefore(graceDeadline)) return;
-
-    final notifId = 'cancel-${booking.id}';
-    if (appState.hasNotification(notifId)) return;
-
-    appState.autoCancelBooking(booking.id);
-
-    appState.pushNotification(
-      AppNotification(
-        id: notifId,
-        title: 'إلغاء الحجز',
-        body:
-            'تم إلغاء حجزك تلقائياً لعدم الحضور خلال 15 دقيقة من الموعد.',
-        createdAt: now,
-        icon: Icons.cancel_outlined,
-        color: const Color(0xFFFF4D6D),
-        bookingId: booking.id,
-        type: NotificationType.bookingCancelled,
-      ),
-    );
   }
 }

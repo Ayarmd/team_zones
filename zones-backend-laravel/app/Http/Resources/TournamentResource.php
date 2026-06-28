@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class TournamentResource extends JsonResource
 {
@@ -27,9 +27,7 @@ class TournamentResource extends JsonResource
             'title' => $this->title,
             'game_name' => $this->game_name,
             'game_emoji' => $this->game_emoji,
-            'cover_image_url' => $this->cover_image
-                ? url('storage/'.$this->cover_image)
-                : null,
+            'cover_image_url' => MediaUrl::resolve($this->cover_image),
             'start_date' => $this->start_date?->toIso8601String(),
             'end_date' => $this->end_date?->toIso8601String(),
             'registration_deadline' => $this->registration_deadline?->toIso8601String(),

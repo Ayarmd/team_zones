@@ -8,10 +8,13 @@ use App\Models\Device;
 use App\Models\Package;
 use App\Models\Station;
 use App\Models\User;
+use App\Services\CustomerBanService;
 use App\Services\CustomerBookingService;
 use App\Services\LoyaltyService;
 use App\Services\PaymentLogService;
 use App\Support\BookingStatus;
+use App\Support\MediaUrl;
+use App\Support\SessionStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +24,7 @@ class ReceptionCalendarController extends Controller
     public function __construct(
         private readonly LoyaltyService $loyalty,
         private readonly CustomerBookingService $bookings,
+        private readonly CustomerBanService $customerBans,
     ) {}
     public function index(Request $request): JsonResponse
     {
@@ -251,6 +255,45 @@ class ReceptionCalendarController extends Controller
         ]);
     }
 
+    public function markNoShow(Request $request, Booking $booking): JsonResponse
+    {
+        $user = $this->staffUser($request);
+        $this->authorizeBooking($user, $booking);
+
+        if ($booking->session_status === SessionStatus::NO_SHOW) {
+            return response()->json(['message' => 'تم تسجيل عدم الحضور مسبقاً.'], 422);
+        }
+
+        if ($booking->is_checked_in) {
+            return response()->json(['message' => 'لا يمكن تسجيل عدم حضور لحجز تم تسجيل حضوره.'], 422);
+        }
+
+        if (in_array($booking->booking_status, BookingStatus::inactiveStatuses(), true)) {
+            return response()->json(['message' => 'الحجز غير قابل لمعالجة عدم الحضور.'], 422);
+        }
+
+        $result = $this->customerBans->markBookingNoShow($booking);
+        if ($result === null) {
+            return response()->json(['message' => 'تعذّر معالجة عدم الحضور لهذا الحجز.'], 422);
+        }
+
+        $booking = $booking->fresh('package');
+
+        return response()->json([
+            'message' => 'تم تسجيل عدم الحضور وإلغاء الحجز.',
+            'no_show_count' => $result['no_show_count'],
+            'ban_created' => $result['ban_created'],
+            'ban' => $result['ban']
+                ? $this->customerBans->banPayload($result['ban'], true)
+                : null,
+            'slot' => $this->mapBookingToSlot(
+                $booking,
+                $booking->start_date->format('Y-m-d'),
+                $this->normalizeHour($booking->start_time),
+            ),
+        ]);
+    }
+
     public function endSession(Request $request, Booking $booking): JsonResponse
     {
         $user = $this->staffUser($request);
@@ -306,7 +349,11 @@ class ReceptionCalendarController extends Controller
 
     private function mapBookingToSlot(Booking $booking, string $date, string $hour): array
     {
-        $status = $booking->session_status === 'playing' ? 'busy' : 'reserved';
+        $status = match ($booking->session_status) {
+            'playing' => 'busy',
+            SessionStatus::NO_SHOW => 'no_show',
+            default => 'reserved',
+        };
         $source = $booking->booking_source === 'mobile_app' ? 'app' : 'manual';
         $package = $booking->package;
 
@@ -332,14 +379,16 @@ class ReceptionCalendarController extends Controller
             'isPaid' => $booking->payment_status === 'paid',
             'source' => $source,
             'bookingType' => $source === 'app' ? 'تطبيق الزبون' : 'حجز يدوي',
-            'attendanceStatus' => $booking->is_checked_in ? 'checked_in' : 'awaiting',
+            'attendanceStatus' => match (true) {
+                $booking->session_status === SessionStatus::NO_SHOW => 'no_show',
+                $booking->is_checked_in => 'checked_in',
+                default => 'awaiting',
+            },
             'sessionStatus' => $booking->session_status,
             'startedAt' => $booking->session_started_at?->toIso8601String(),
             'endedAt' => $booking->session_ended_at?->toIso8601String(),
             'sessionDurationSeconds' => $booking->session_duration_seconds,
-            'receiptPdfUrl' => $booking->receipt_pdf_path
-                ? url('storage/'.$booking->receipt_pdf_path)
-                : null,
+            'receiptPdfUrl' => MediaUrl::resolve($booking->receipt_pdf_path),
             'createdAt' => $booking->created_at?->toIso8601String(),
         ];
     }

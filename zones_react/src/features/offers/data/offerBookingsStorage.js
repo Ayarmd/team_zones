@@ -45,12 +45,25 @@ export function saveOfferBookings(list) {
 }
 
 /** عدد مرات استخدام العرض — من عمليات الحجز */
-export function getOfferUsageCount(offerId) {
+export function getOfferUsageCount(offerId, offerRow) {
+  if (offerRow?.usageCount != null) return offerRow.usageCount;
   return loadOfferBookings().filter((b) => b.offerId === offerId).length;
 }
 
-/** العرض الأكثر استخداماً — يُحسب من الحجوزات */
+/** العرض الأكثر استخداماً — من بيانات العروض (API) أو الحجوزات المحلية */
 export function getMostUsedOfferStats(offers = []) {
+  const fromApi = offers.some((o) => o.usageCount != null);
+  if (fromApi) {
+    let top = null;
+    for (const offer of offers) {
+      const count = offer.usageCount ?? 0;
+      if (!top || count > top.count) {
+        top = { count, name: offer.name ?? "—" };
+      }
+    }
+    return top ?? { count: 0, name: "لا استخدام بعد" };
+  }
+
   const bookings = loadOfferBookings();
   const counts = new Map();
   for (const b of bookings) {

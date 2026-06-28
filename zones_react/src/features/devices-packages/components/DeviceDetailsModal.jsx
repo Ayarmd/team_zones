@@ -274,9 +274,9 @@ export default function DeviceDetailsModal({
 
     const refreshStats = () => {
 
-      setSessionsCount(getDeviceSessionsThisMonth(device.id));
+      setSessionsCount(getDeviceSessionsThisMonth(device.id, device));
 
-      setLastActivity(getDeviceLastActivity(device.id));
+      setLastActivity(getDeviceLastActivity(device.id, device));
 
     };
 

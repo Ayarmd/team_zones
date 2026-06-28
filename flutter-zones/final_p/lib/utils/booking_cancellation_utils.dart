@@ -1,14 +1,16 @@
+import '../core/constants/booking_policy.dart';
 import '../models/booking.dart';
 
-/// Returns true when cancellation is still allowed (strictly more than 30 minutes before start).
+/// Returns true when the customer may still self-cancel (≥ [BookingPolicy.customerCancellationLockMinutes] before start).
 bool canCancelBooking(Booking booking) {
   if (!booking.isActive || booking.isCancelled) return false;
 
   final start = booking.startDateTime;
   if (start == null) return true;
 
-  return start.difference(DateTime.now()) >= const Duration(minutes: 30);
+  return start.difference(DateTime.now()) >=
+      const Duration(minutes: BookingPolicy.customerCancellationLockMinutes);
 }
 
 String cancellationBlockedMessage() =>
-    'لا يمكن الإلغاء خلال 30 دقيقة من موعد الحجز — ولا يُسترد المبلغ المدفوع';
+    'لا يمكن الإلغاء خلال ${BookingPolicy.customerCancellationLockMinutes} دقيقة من موعد الحجز — ولا يُسترد المبلغ المدفوع';

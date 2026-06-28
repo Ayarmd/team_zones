@@ -36,9 +36,7 @@ class CustomerTournamentParticipationMapper
             'game_emoji' => $tournament->game_emoji ?? '🎮',
             'lounge_id' => (string) $tournament->station_id,
             'lounge_name' => $tournament->station?->name ?? '',
-            'cover_image_url' => $tournament->cover_image
-                ? url('storage/'.$tournament->cover_image)
-                : null,
+            'cover_image_url' => MediaUrl::resolve($tournament->cover_image),
             'status' => $participant->status,
             'status_label' => $participant->status === 'withdrawn' ? 'منسحب' : 'مسجل',
             'tournament_status' => $tournament->status,

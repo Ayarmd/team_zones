@@ -2,33 +2,31 @@ import { useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { zonesToastError, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
 import PageHeader from "../../super-admin/components/ui/PageHeader";
-import { changeUserPassword, getAuthSession, getUserById, verifyCurrentPassword } from "../../auth/data/mockUsersStorage";
+import { changeStaffPassword } from "../../auth/data/staffProfileApi";
 import { PasswordField } from "../../../components/ui/icon-field";
 
 export default function ManagerChangePasswordPage() {
-  const session = getAuthSession();
-  const user = session?.id ? getUserById(session.id) : null;
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    if (!user) return;
-    const verify = verifyCurrentPassword(user.id, oldPass);
-    if (!verify.ok) {
-      zonesToastError(verify.error || "كلمة المرور الحالية غير صحيحة");
-      return;
-    }
     if (newPass !== confirmPass) {
       zonesToastError("تأكيد كلمة المرور غير متطابق");
       return;
     }
-    const res = changeUserPassword(user.id, oldPass, newPass);
+
+    setSubmitting(true);
+    const res = await changeStaffPassword(oldPass, newPass);
+    setSubmitting(false);
+
     if (!res.ok) {
       zonesToastError(res.error);
       return;
     }
+
     setOldPass("");
     setNewPass("");
     setConfirmPass("");
@@ -37,7 +35,7 @@ export default function ManagerChangePasswordPage() {
 
   return (
     <>
-    <PageHeader title="تغيير كلمة المرور" />
+      <PageHeader title="تغيير كلمة المرور" />
 
       <div className="mx-auto max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h2 className="mb-5 flex items-center gap-2 text-sm font-extrabold text-gray-900 dark:text-white">
@@ -56,9 +54,10 @@ export default function ManagerChangePasswordPage() {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-[#6B5478] py-2.5 text-xs font-bold text-white transition hover:bg-[#5a4665]"
+            disabled={submitting}
+            className="w-full rounded-xl bg-[#6B5478] py-2.5 text-xs font-bold text-white transition hover:bg-[#5a4665] disabled:opacity-60"
           >
-            تغيير كلمة المرور
+            {submitting ? "جاري الحفظ..." : "تغيير كلمة المرور"}
           </button>
         </form>
       </div>

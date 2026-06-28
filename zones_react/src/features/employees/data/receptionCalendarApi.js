@@ -69,7 +69,27 @@ export async function apiCheckInCalendarBooking(bookingId) {
 export async function apiEndCalendarSession(bookingId) {
   try {
     const { data } = await apiClient.post(`/staff/reception/calendar/${bookingId}/end`);
-    return { ok: true, message: data.message };
+    return {
+      ok: true,
+      message: data.message,
+      loyalty: data.loyalty ?? null,
+    };
+  } catch (error) {
+    return { ok: false, error: mapApiErrorMessage(error) };
+  }
+}
+
+export async function apiMarkNoShowCalendarBooking(bookingId) {
+  try {
+    const { data } = await apiClient.post(`/staff/reception/calendar/${bookingId}/no-show`);
+    return {
+      ok: true,
+      message: data.message,
+      noShowCount: data.no_show_count,
+      banCreated: Boolean(data.ban_created),
+      ban: data.ban ?? null,
+      slot: data.slot ?? null,
+    };
   } catch (error) {
     return { ok: false, error: mapApiErrorMessage(error) };
   }

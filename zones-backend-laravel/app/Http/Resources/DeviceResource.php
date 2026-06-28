@@ -68,6 +68,12 @@ class DeviceResource extends JsonResource
 
             'notes' => $device->notes,
 
+            'sessions_this_month' => (int) ($device->sessions_this_month_count ?? 0),
+
+            'last_session_at' => $device->last_session_ended_at
+                ? (string) $device->last_session_ended_at
+                : null,
+
             'created_at' => $device->created_at?->toIso8601String(),
 
             'updated_at' => $device->updated_at?->toIso8601String(),

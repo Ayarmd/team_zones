@@ -1,7 +1,6 @@
 import '../../core/config/api_config.dart';
-
 import '../../core/http/api_client.dart';
-
+import '../../core/utils/media_url_resolver.dart';
 import '../../models/tournament.dart';
 
 
@@ -391,7 +390,7 @@ class TournamentCatalogRepository {
 
           : null,
 
-      coverImageUrl: json['cover_image_url'] as String?,
+      coverImageUrl: MediaUrlResolver.resolve(json['cover_image_url'] as String?),
 
       prizeSummary: _asString(json['prize_summary']),
 

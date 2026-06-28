@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final appState = context.read<AppStateProvider>();
       context.read<ZonesDataProvider>().loadUserProfile();
       context.read<ZonesDataProvider>().loadOffers(forceRefresh: true);
+      context.read<AppStateProvider>().syncBanStatusFromApi();
       BookingAutomationService.instance.start(
         appState,
         tournamentProvider: context.read<TournamentProvider>(),
@@ -59,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       LiveBookingSyncService.instance.syncNow();
       context.read<ZonesDataProvider>().loadOffers(forceRefresh: true);
+      context.read<AppStateProvider>().syncBanStatusFromApi();
     }
   }
 

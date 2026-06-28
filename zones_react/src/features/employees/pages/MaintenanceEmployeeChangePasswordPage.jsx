@@ -2,34 +2,26 @@ import { useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { zonesToastError, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
 import PageHeader from "../../super-admin/components/ui/PageHeader";
-import {
-  changeUserPassword,
-  getAuthSession,
-  verifyCurrentPassword,
-} from "../../auth/data/mockUsersStorage";
+import { changeStaffPassword } from "../../auth/data/staffProfileApi";
 import { PasswordField } from "../../../components/ui/icon-field";
 
 export default function MaintenanceEmployeeChangePasswordPage() {
-  const session = getAuthSession();
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    if (!session?.id) {
-      zonesToastError("الجلسة غير صالحة");
-      return;
-    }
-    if (!verifyCurrentPassword(session.id, oldPass).ok) {
-      zonesToastError("كلمة المرور الحالية غير صحيحة");
-      return;
-    }
     if (newPass !== confirmPass) {
       zonesToastError("تأكيد كلمة المرور غير متطابق");
       return;
     }
-    const res = changeUserPassword(session.id, oldPass, newPass);
+
+    setSubmitting(true);
+    const res = await changeStaffPassword(oldPass, newPass);
+    setSubmitting(false);
+
     if (!res.ok) {
       zonesToastError(res.error);
       return;
@@ -61,9 +53,10 @@ export default function MaintenanceEmployeeChangePasswordPage() {
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#6B5478] py-2.5 text-xs font-bold text-white transition hover:bg-[#5a4665]"
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#6B5478] py-2.5 text-xs font-bold text-white transition hover:bg-[#5a4665] disabled:opacity-60"
           >
-            <KeyRound size={14} /> تغيير كلمة المرور
+            <KeyRound size={14} /> {submitting ? "جاري الحفظ..." : "تغيير كلمة المرور"}
           </button>
         </form>
       </div>

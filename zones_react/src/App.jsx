@@ -9,6 +9,7 @@ import ReceptionDashboardPage from "./features/employees/pages/ReceptionDashboar
 import ReceptionComingSoonPage from "./features/employees/pages/ReceptionComingSoonPage";
 import ReceptionCalendarPage from "./features/employees/pages/ReceptionCalendarPage";
 import ReceptionBookingsPage from "./features/employees/pages/ReceptionBookingsPage";
+import ReceptionBannedPage from "./features/employees/pages/ReceptionBannedPage";
 import ReceptionSessionPage from "./features/employees/pages/ReceptionSessionPage";
 import ReceptionDevicesPage from "./features/employees/pages/ReceptionDevicesPage";
 import ReceptionPackagesPage from "./features/employees/pages/ReceptionPackagesPage";
@@ -105,6 +106,7 @@ function App() {
           <Route path="reservations" element={<ReceptionReservationsRedirect />} />
           <Route path="reservations/calendar" element={<ReceptionCalendarPage />} />
           <Route path="reservations/bookings" element={<ReceptionBookingsPage />} />
+          <Route path="reservations/banned" element={<ReceptionBannedPage />} />
           <Route path="reservations/session" element={<ReceptionSessionPage />} />
           <Route path="devices" element={<ReceptionDevicesPage />} />
           <Route path="devices/broken" element={<Navigate to="../devices" replace />} />

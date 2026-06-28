@@ -13,6 +13,10 @@ return new class extends Migration
             Schema::rename('station_broadcasts', 'station_alerts');
         }
 
+        if (! Schema::hasTable('station_alerts')) {
+            return;
+        }
+
         if (Schema::hasColumn('staff_notifications', 'broadcast_id')) {
             Schema::table('staff_notifications', function (Blueprint $table) {
                 $table->dropForeign(['broadcast_id']);

@@ -10,6 +10,7 @@ export function getReceptionEmployeeRoutes(employeeId) {
     reservations: `${base}/reservations`,
     reservationsCalendar: `${base}/reservations/calendar`,
     reservationsBookings: `${base}/reservations/bookings`,
+    reservationsBanned: `${base}/reservations/banned`,
     reservationsSession: `${base}/reservations/session`,
     devices: `${base}/devices`,
     devicesBroken: `${base}/devices/broken`,

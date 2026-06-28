@@ -25,6 +25,7 @@ class ManagerDeviceController extends Controller
 
         $devices = Device::query()
             ->with(['openFault'])
+            ->withSessionStats()
             ->where('station_id', $station->id)
             ->when($request->filled('package_id'), fn ($q) => $q->where('package_id', $request->integer('package_id')))
             ->when($request->filled('q'), function ($q) use ($request) {

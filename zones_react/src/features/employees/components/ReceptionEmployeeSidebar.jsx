@@ -57,6 +57,7 @@ export default function ReceptionEmployeeSidebar({ onNavigate, onMenuToggle }) {
     children: [
       { label: "تقويم", path: routes.reservationsCalendar },
       { label: "حجوزات", path: routes.reservationsBookings },
+      { label: "محظور", path: routes.reservationsBanned },
       { label: "جلسة", path: routes.reservationsSession },
     ],
   };

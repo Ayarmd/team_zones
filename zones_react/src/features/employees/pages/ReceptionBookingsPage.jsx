@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, UserCheck } from "lucide-react";
-import { zonesConfirm, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
+import { Ban, FileText, UserCheck } from "lucide-react";
+import { zonesConfirm, zonesToastError, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
 import IconButton from "../../../shared/components/ui/IconButton";
 import TableActionsGroup from "../../../shared/components/ui/TableActionsGroup";
 import { TABLE_ACTIONS_TD, TABLE_ACTIONS_TH } from "../../../shared/components/ui/tableActionStyles";
@@ -15,6 +15,9 @@ import {
   checkInBooking,
   getAwaitingBookings,
   loadCalendarSlots,
+  markNoShowCalendarBooking,
+  NO_SHOW_GRACE_MS,
+  parseSlotStartMs,
   paymentTypeLabel,
   RECEPTION_CALENDAR_EVENT,
   syncReceptionLiveState,
@@ -149,6 +152,41 @@ export default function ReceptionBookingsPage() {
 
   const handleCheckIn = (row) => runCheckIn([row.id], row);
 
+  const canMarkNoShow = (row) => {
+    const startMs = parseSlotStartMs(row.date, row.hour);
+    if (startMs == null) return false;
+    return Date.now() >= startMs + NO_SHOW_GRACE_MS;
+  };
+
+  const handleNoShow = async (row) => {
+    const confirmed = await zonesConfirm({
+      title: "تسجيل عدم الحضور؟",
+      text: `سيتم إلغاء حجز «${row.visitorName}» وتسجيله كغياب (No-Show).`,
+      confirmText: "تسجيل الغياب",
+      cancelText: "إلغاء",
+      icon: "warning",
+    });
+    if (!confirmed) return;
+
+    const result = await markNoShowCalendarBooking(row.id);
+    if (!result.ok) {
+      zonesToastError(result.error || "تعذر تسجيل عدم الحضور.");
+      return;
+    }
+
+    reloadView();
+    if (result.banCreated) {
+      zonesToastSuccess("تم تسجيل الغياب وإنشاء حظر تلقائي للزبون.", "تم تسجيل No-Show");
+      return;
+    }
+    zonesToastSuccess(
+      result.noShowCount
+        ? `تم التسجيل — عدد الغيابات الحالي: ${result.noShowCount}`
+        : "تم تسجيل عدم الحضور وإلغاء الحجز.",
+      "تم تسجيل No-Show",
+    );
+  };
+
   const openVoucher = (row) => {
     const device = deviceMap.get(row.deviceId);
     setVoucherSlot({
@@ -277,6 +315,14 @@ export default function ReceptionBookingsPage() {
                             tone="brand"
                             onClick={() => handleCheckIn(row)}
                           />
+                          {canMarkNoShow(row) ? (
+                            <IconButton
+                              icon={Ban}
+                              label="تسجيل عدم الحضور"
+                              tone="danger"
+                              onClick={() => handleNoShow(row)}
+                            />
+                          ) : null}
                         </TableActionsGroup>
                       </td>
                     </tr>

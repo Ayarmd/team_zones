@@ -1,3 +1,4 @@
+import '../../core/utils/media_url_resolver.dart';
 import '../../models/zones_models.dart';
 
 /// REST-shaped offer row — mirrors GET /api/offers response.
@@ -66,7 +67,7 @@ class OfferCatalogDto {
     return OfferModel(
       id: id,
       title: title,
-      offerImage: offerImage,
+      offerImage: MediaUrlResolver.resolve(offerImage) ?? offerImage,
       description: description,
       validFrom: validFrom,
       expiresAt: expiresAt,

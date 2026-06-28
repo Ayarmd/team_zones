@@ -69,11 +69,17 @@ function isCurrentMonth(iso) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
 }
 
-export function getDeviceSessionsThisMonth(deviceId) {
+import { getActiveStaffSession, isApiStaffSession } from "../../devices-packages/data/hallCatalogSync";
+
+export function getDeviceSessionsThisMonth(deviceId, deviceRow) {
+  if (deviceRow?.sessionsThisMonth != null) return deviceRow.sessionsThisMonth;
+  if (isApiStaffSession(getActiveStaffSession())) return 0;
   return loadDeviceSessions().filter((s) => s.deviceId === deviceId && isCurrentMonth(s.bookedAt)).length;
 }
 
-export function getDeviceLastActivity(deviceId) {
+export function getDeviceLastActivity(deviceId, deviceRow) {
+  if (deviceRow?.lastSessionAt) return formatActivityDate(deviceRow.lastSessionAt);
+  if (isApiStaffSession(getActiveStaffSession())) return "—";
   const sessions = loadDeviceSessions().filter((s) => s.deviceId === deviceId);
   if (!sessions.length) return "—";
   const latest = sessions.reduce((a, b) =>

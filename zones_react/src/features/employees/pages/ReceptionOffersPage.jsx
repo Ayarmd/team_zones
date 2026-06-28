@@ -20,6 +20,7 @@ import {
   getOfferPackagePrice,
   OFFERS_STORAGE_EVENT,
   loadOffers,
+  refreshOffersFromApi,
 } from "../../offers/data/offersStorage";
 
 const PAGE_SIZE = 8;
@@ -48,11 +49,16 @@ export default function ReceptionOffersPage() {
   const [packages, setPackages] = useState(() => loadActivePackages());
 
   useEffect(() => {
-    const sync = () => setOffersList(loadOffers());
-    window.addEventListener(OFFERS_STORAGE_EVENT, sync);
+    const sync = async () => {
+      await refreshOffersFromApi();
+      setOffersList(loadOffers());
+    };
+    sync();
+    const onEvent = () => setOffersList(loadOffers());
+    window.addEventListener(OFFERS_STORAGE_EVENT, onEvent);
     window.addEventListener("focus", sync);
     return () => {
-      window.removeEventListener(OFFERS_STORAGE_EVENT, sync);
+      window.removeEventListener(OFFERS_STORAGE_EVENT, onEvent);
       window.removeEventListener("focus", sync);
     };
   }, []);
@@ -154,7 +160,7 @@ export default function ReceptionOffersPage() {
                       <td className="px-3 py-3 text-gray-600 dark:text-gray-300">{formatOfferDate(row.startDate)}</td>
                       <td className="px-3 py-3 text-gray-600 dark:text-gray-300">{formatOfferDate(row.endDate)}</td>
                       <td className="px-3 py-3 text-gray-600 dark:text-gray-300">
-                        {usageVersion >= 0 ? getOfferUsageCount(row.id) : 0}
+                        {usageVersion >= 0 ? getOfferUsageCount(row.id, row) : 0}
                       </td>
                       <td className="px-3 py-3">
                         <StatusBadge active={row.isActive !== false} />

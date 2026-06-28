@@ -45,3 +45,7 @@ class AuthLogoutRequested extends AuthEvent {
 class AuthDeleteAccountRequested extends AuthEvent {
   const AuthDeleteAccountRequested();
 }
+
+class AuthSessionRestoreRequested extends AuthEvent {
+  const AuthSessionRestoreRequested();
+}

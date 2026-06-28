@@ -19,6 +19,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegister);
     on<AuthLogoutRequested>(_onLogout);
     on<AuthDeleteAccountRequested>(_onDeleteAccount);
+    on<AuthSessionRestoreRequested>(_onRestoreSession);
   }
 
   final AuthRepository _repository;
@@ -110,6 +111,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthUnauthenticated());
     } on AuthException catch (e) {
       emit(AuthFailure(e.message));
+    }
+  }
+
+  Future<void> _onRestoreSession(
+    AuthSessionRestoreRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = await _repository.restoreSession();
+      if (user != null) {
+        emit(AuthAuthenticated(user));
+      } else {
+        emit(const AuthUnauthenticated());
+      }
+    } catch (_) {
+      emit(const AuthUnauthenticated());
     }
   }
 }

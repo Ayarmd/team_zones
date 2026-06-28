@@ -53,4 +53,25 @@ class Device extends Model
             ->whereIn('status', ['pending', 'in_progress'])
             ->latestOfMany();
     }
+
+    public function bookings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function scopeWithSessionStats($query)
+    {
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        return $query
+            ->withCount(['bookings as sessions_this_month_count' => function ($q) use ($start, $end) {
+                $q->where('session_status', 'finished')
+                    ->whereNotNull('session_ended_at')
+                    ->whereBetween('session_ended_at', [$start, $end]);
+            }])
+            ->withMax(['bookings as last_session_ended_at' => function ($q) {
+                $q->where('session_status', 'finished')->whereNotNull('session_ended_at');
+            }], 'session_ended_at');
+    }
 }

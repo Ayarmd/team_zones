@@ -10,6 +10,7 @@ import '../../../providers/app_state_provider.dart';
 import '../../../providers/lounge_ratings_provider.dart';
 import '../../../providers/zones_data_provider.dart';
 import '../../../widgets/zonez_logo.dart';
+import '../../../widgets/customer_ban_banner.dart';
 import '../../lounge/lounge_details_screen.dart';
 import '../widgets/zonez_lounge_card.dart';
 import '../widgets/offers_carousel.dart';
@@ -97,6 +98,7 @@ class _HomeTabState extends State<HomeTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  CustomerBanBanner(status: appState.customerBan),
                   OffersSection(
                     isLoading: zonesData.isLoadingOffers,
                     offers: zonesData.activeOffers,

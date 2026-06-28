@@ -1,4 +1,5 @@
 import { apiClient, mapApiErrorMessage } from "../../../shared/api/apiClient";
+import { resolveMediaUrl } from "../../../shared/utils/resolveMediaUrl";
 import { validateRegistrationDeadline } from "../utils/tournamentDeadlineValidation";
 
 function formatDisplayDate(iso) {
@@ -49,7 +50,7 @@ export function mapApiTournament(row) {
     prize: row.prize_summary || row.prize || "",
     delayMinutes: Number(row.delay_minutes ?? row.delayMinutes ?? 10),
     withdrawal: row.withdrawal_rule || row.withdrawal || "",
-    coverImage: row.cover_image_url || row.coverImage || null,
+    coverImage: resolveMediaUrl(row.cover_image_url || row.coverImage || "") || null,
     matchRules: row.match_rules || "",
   };
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ManagerCommentController;
 use App\Http\Controllers\Api\ManagerExpenseController;
 use App\Http\Controllers\Api\ManagerFinanceController;
 use App\Http\Controllers\Api\StationCommentController;
+use App\Http\Controllers\Api\CustomerBanController;
 use App\Http\Controllers\Api\CustomerBookingController;
 use App\Http\Controllers\Api\PlutuPaymentController;
 use App\Http\Controllers\Api\BookingReceiptController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\ManagerDeviceController;
 use App\Http\Controllers\Api\ManagerOfferController;
 use App\Http\Controllers\Api\ManagerPackageController;
 use App\Http\Controllers\Api\ManagerStationController;
+use App\Http\Controllers\Api\ReceptionBanController;
 use App\Http\Controllers\Api\ReceptionCalendarController;
 use App\Http\Controllers\Api\StaffHallCatalogController;
 use App\Http\Controllers\Api\MaintenanceFaultController;
@@ -136,7 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('role:manager');
 
     Route::get('/manager/offers', [ManagerOfferController::class, 'index'])
-        ->middleware('role:manager');
+        ->middleware('role:manager|reception');
     Route::post('/manager/offers', [ManagerOfferController::class, 'store'])
         ->middleware('role:manager');
     Route::put('/manager/offers/{offer}', [ManagerOfferController::class, 'update'])
@@ -229,6 +231,15 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('role:manager|reception');
     Route::post('/staff/reception/calendar/{booking}/end', [ReceptionCalendarController::class, 'endSession'])
         ->middleware('role:manager|reception');
+    Route::post('/staff/reception/calendar/{booking}/no-show', [ReceptionCalendarController::class, 'markNoShow'])
+        ->middleware('role:manager|reception');
+
+    Route::get('/staff/reception/bans', [ReceptionBanController::class, 'bans'])
+        ->middleware('role:manager|reception');
+    Route::get('/staff/reception/no-shows', [ReceptionBanController::class, 'noShows'])
+        ->middleware('role:manager|reception');
+    Route::post('/staff/reception/bans/{ban}/lift', [ReceptionBanController::class, 'lift'])
+        ->middleware('role:manager|reception');
 
     Route::get('/bookings', [CustomerBookingController::class, 'index']);
     Route::get('/lounges/{station}/availability', [CustomerBookingController::class, 'availability']);
@@ -238,6 +249,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{booking}/sync-payment', [CustomerBookingController::class, 'syncPayment']);
 
     Route::get('/loyalty/status', [CustomerLoyaltyController::class, 'status']);
+    Route::get('/customer/ban-status', [CustomerBanController::class, 'status']);
     Route::post('/loyalty/notifications/{notification}/read', [CustomerLoyaltyController::class, 'markNotificationRead']);
 
     Route::post('/bookings/receipt/preview', [BookingReceiptController::class, 'previewPayload']);

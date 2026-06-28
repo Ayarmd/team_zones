@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Services\BookingReceiptPdfService;
+use App\Support\MediaUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,7 +32,7 @@ class BookingReceiptController extends Controller
             return response()->json([
                 'message' => 'Receipt PDF generated',
                 'receipt_pdf_path' => $path,
-                'receipt_pdf_url' => url('storage/'.$path),
+                'receipt_pdf_url' => MediaUrl::resolve($path),
             ]);
         }
 
@@ -55,7 +56,7 @@ class BookingReceiptController extends Controller
             return response()->json([
                 'message' => 'Receipt PDF generated',
                 'receipt_pdf_path' => $path,
-                'receipt_pdf_url' => url('storage/'.$path),
+                'receipt_pdf_url' => MediaUrl::resolve($path),
             ]);
         }
 

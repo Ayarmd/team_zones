@@ -1,28 +1,19 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "../components/ZonesToast.css";
 
 const ZonesToastContext = createContext(null);
 
 export function ZonesToastProvider({ children }) {
-  const navigate = useNavigate();
   const [toast, setToast] = useState(null);
 
   const hideToast = useCallback(() => setToast(null), []);
 
   const showInviteSentToast = useCallback(
-    (onNavigate) => {
-      setToast({
-        message: "تم إرسال الدعوة! اضغط هنا لمحاكاة دخول الموظف",
-        onClick: () => {
-          hideToast();
-          if (onNavigate) onNavigate();
-          else navigate("/accept-invitation");
-        },
-      });
+    (message = "تم إرسال الدعوة! يمكن للموظف إكمال التسجيل من رابط البريد.") => {
+      setToast({ message, onClick: hideToast });
       window.setTimeout(hideToast, 12000);
     },
-    [hideToast, navigate],
+    [hideToast],
   );
 
   const value = useMemo(

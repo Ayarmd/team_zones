@@ -95,10 +95,13 @@ export function saveOffers(list) {
   }
 }
 
-/** Sync offers from Laravel for manager API sessions. */
+/** Sync offers from Laravel for manager/reception API sessions. */
 export async function refreshOffersFromApi() {
   const session = getActiveStaffSession();
-  if (!isApiStaffSession(session) || session.role !== "manager") {
+  if (!isApiStaffSession(session)) {
+    return { ok: false, skipped: true };
+  }
+  if (!["manager", "reception"].includes(session.role)) {
     return { ok: false, skipped: true };
   }
 

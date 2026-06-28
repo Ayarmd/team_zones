@@ -29,6 +29,7 @@ class SessionSyncListener extends StatelessWidget {
           zonesData.applyUserProfile(user);
           appState.updateProfile(name: user.name, phone: user.phone);
           await appState.syncBookingsFromApi();
+          await appState.syncBanStatusFromApi();
           if (!context.mounted) return;
           context.read<NotificationBloc>().add(const SyncFcmTokenRequested());
         }

@@ -1,3 +1,4 @@
+import '../../core/utils/media_url_resolver.dart';
 import '../../core/branding/branding_constants.dart';
 
 class BrandingSettings {
@@ -20,7 +21,9 @@ class BrandingSettings {
 
   factory BrandingSettings.fromJson(Map<String, dynamic> json) {
     final rawLogo = json['logo_url'];
-    final logo = rawLogo is String && rawLogo.trim().isNotEmpty ? rawLogo.trim() : null;
+    final logo = rawLogo is String && rawLogo.trim().isNotEmpty
+        ? MediaUrlResolver.resolve(rawLogo.trim())
+        : null;
 
     return BrandingSettings(
       platformName: (json['platform_name'] as String?)?.trim().isNotEmpty == true

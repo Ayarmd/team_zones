@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/utils/media_url_resolver.dart';
 import '../../../core/theme/zonez_colors.dart';
 import '../../../models/tournament.dart';
 import '../../../providers/tournament_provider.dart';
@@ -168,7 +169,7 @@ class TournamentCard extends StatelessWidget {
             children: [
               if (tournament.coverImageUrl != null)
                 Image.network(
-                  tournament.coverImageUrl!,
+                  MediaUrlResolver.resolve(tournament.coverImageUrl)!,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => _fallbackBg(isDark),
                 )

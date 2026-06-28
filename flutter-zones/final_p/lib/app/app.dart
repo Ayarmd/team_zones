@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/routes/app_routes.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/bloc/auth_bloc.dart';
+import '../features/auth/bloc/auth_event.dart';
 import '../features/notifications/bloc/notification_bloc.dart';
 import '../providers/branding_provider.dart';
 import '../providers/app_state_provider.dart';
@@ -84,7 +85,9 @@ class ZonezRoot extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => AuthBloc()),
+        BlocProvider(
+          create: (_) => AuthBloc()..add(const AuthSessionRestoreRequested()),
+        ),
         BlocProvider(create: (_) => NotificationBloc()),
       ],
       child: MultiProvider(

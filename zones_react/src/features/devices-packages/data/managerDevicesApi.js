@@ -21,6 +21,8 @@ function mapApiDevice(row) {
     notes: row.notes || "",
     createdAt: row.created_at || row.createdAt || "—",
     deviceCode: deviceCode || displayName,
+    sessionsThisMonth: Number(row.sessions_this_month ?? row.sessionsThisMonth ?? 0),
+    lastSessionAt: row.last_session_at || row.lastSessionAt || null,
   };
 }
 

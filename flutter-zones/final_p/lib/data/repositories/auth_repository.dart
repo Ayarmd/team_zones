@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
+import '../../core/storage/auth_token_storage.dart';
 import '../../models/auth_exception.dart';
 import '../../models/zones_models.dart';
 
@@ -15,7 +16,51 @@ class AuthRepository {
 
   String? get authToken => _authToken;
 
-  void clearToken() => _authToken = null;
+  Future<void> _persistToken(String? token) async {
+    _authToken = token;
+    if (token != null && token.isNotEmpty) {
+      await AuthTokenStorage.save(token);
+    } else {
+      await AuthTokenStorage.clear();
+    }
+  }
+
+  void clearToken() {
+    _authToken = null;
+    AuthTokenStorage.clear();
+  }
+
+  Future<UserModel?> restoreSession() async {
+    final stored = await AuthTokenStorage.load();
+    if (stored == null || stored.isEmpty) return null;
+
+    _authToken = stored;
+    final uri = Uri.parse('${ApiConfig.apiUrl}/profile');
+
+    try {
+      final response = await http
+          .get(uri, headers: authHeaders)
+          .timeout(const Duration(seconds: 20));
+
+      Map<String, dynamic>? body;
+      try {
+        body = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {}
+
+      if (response.statusCode == 200) {
+        final userJson = body?['user'];
+        if (userJson is Map<String, dynamic>) {
+          return _userFromJson(userJson);
+        }
+      }
+
+      clearToken();
+      return null;
+    } catch (_) {
+      clearToken();
+      return null;
+    }
+  }
 
   String _normalizeEmail(String email) => email.trim().toLowerCase();
 
@@ -126,7 +171,7 @@ class AuthRepository {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final token = body?['token'] as String?;
         if (token != null) {
-          _authToken = token;
+          await _persistToken(token);
         }
         final userJson = body?['user'];
         if (userJson is Map<String, dynamic>) {
@@ -181,7 +226,7 @@ class AuthRepository {
             'لم يُرجع الخادم رمز الدخول',
           );
         }
-        _authToken = token;
+        await _persistToken(token);
 
         final userJson = body?['user'];
         if (userJson is Map<String, dynamic>) {
@@ -237,7 +282,7 @@ class AuthRepository {
             'لم يُرجع الخادم رمز الدخول',
           );
         }
-        _authToken = token;
+        await _persistToken(token);
 
         final userJson = body?['user'];
         if (userJson is Map<String, dynamic>) {

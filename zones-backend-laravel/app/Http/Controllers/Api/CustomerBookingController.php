@@ -10,8 +10,10 @@ use App\Models\Package;
 use App\Models\Station;
 use App\Models\User;
 use App\Services\BookingAvailabilityService;
+use App\Services\CustomerBanService;
 use App\Services\CustomerBookingService;
 use App\Support\BookingStatus;
+use App\Support\CustomerCancellationPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +23,7 @@ class CustomerBookingController extends Controller
     public function __construct(
         private readonly BookingAvailabilityService $availability,
         private readonly CustomerBookingService $bookings,
+        private readonly CustomerBanService $customerBans,
     ) {}
 
     public function availability(Request $request, Station $station): JsonResponse
@@ -69,6 +72,7 @@ class CustomerBookingController extends Controller
             'message' => $result['message'],
             'slots' => $result['slots'],
             'booking_stop' => $result['booking_stop'] ?? null,
+            'ban_status' => $this->customerBans->customerStatusPayload($this->customer($request)),
         ]);
     }
 
@@ -191,6 +195,8 @@ class CustomerBookingController extends Controller
         if (in_array($booking->booking_status, BookingStatus::inactiveStatuses(), true)) {
             return response()->json(['message' => 'لا يمكن إلغاء هذا الحجز.'], 422);
         }
+
+        CustomerCancellationPolicy::assertCanCancel($booking);
 
         $booking->update([
             'booking_status' => BookingStatus::CANCELLED,

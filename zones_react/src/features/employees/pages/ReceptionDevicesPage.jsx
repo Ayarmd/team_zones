@@ -322,7 +322,7 @@ export default function ReceptionDevicesPage() {
 
                       <td className="px-3 py-3 font-bold tabular-nums text-gray-700 dark:text-gray-200">
 
-                        {getDeviceSessionsThisMonth(row.id)}
+                        {getDeviceSessionsThisMonth(row.id, row)}
 
                       </td>
 

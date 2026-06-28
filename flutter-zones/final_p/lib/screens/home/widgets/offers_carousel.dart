@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/zonez_colors.dart';
+import '../../../core/utils/media_url_resolver.dart';
 import '../../../models/zones_models.dart';
+import '../../../providers/app_state_provider.dart';
 import 'offer_booking_flow.dart';
 
 /// Dynamic offers block for the home page — API data only, no hardcoded cards.
@@ -117,6 +120,8 @@ class _OffersCarouselState extends State<OffersCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final bookingBanned = context.watch<AppStateProvider>().isCustomerBookingBanned;
+
     return Column(
       children: [
         SizedBox(
@@ -139,6 +144,7 @@ class _OffersCarouselState extends State<OffersCarousel> {
                   discountPercent: discount,
                   finalPriceLabel: _formatPrice(offer.discountedPrice),
                   expiryLabel: _formatExpiry(offer.expiresAt),
+                  bookingBanned: bookingBanned,
                   onBookNow: () => OfferBookingFlow.showFromCarousel(
                     context,
                     offer,
@@ -275,6 +281,7 @@ class _OfferCard extends StatelessWidget {
     required this.expiryLabel,
     required this.onBookNow,
     this.discountPercent,
+    this.bookingBanned = false,
   });
 
   final OfferModel offer;
@@ -283,10 +290,11 @@ class _OfferCard extends StatelessWidget {
   final String expiryLabel;
   final VoidCallback onBookNow;
   final int? discountPercent;
+  final bool bookingBanned;
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = offer.offerImage.trim();
+    final imageUrl = MediaUrlResolver.resolve(offer.offerImage)?.trim() ?? '';
 
     return Container(
       decoration: BoxDecoration(
@@ -406,26 +414,47 @@ class _OfferCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: onBookNow,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: ZonezColors.neonGradient,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        child: Text(
-                          'احجز الآن',
-                          style: GoogleFonts.cairo(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                  child: bookingBanned
+                      ? Opacity(
+                          opacity: 0.55,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: ZonezColors.neonRed.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              child: Text(
+                                'حجز جديد',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: onBookNow,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: ZonezColors.neonGradient,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              child: Text(
+                                'احجز الآن',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),

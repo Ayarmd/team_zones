@@ -33,6 +33,7 @@ class StaffHallCatalogController extends Controller
 
         $devices = Device::query()
             ->with(['openFault'])
+            ->withSessionStats()
             ->where('station_id', $stationId)
             ->orderBy('display_name')
             ->get();

@@ -17,6 +17,7 @@ import {
   apiCancelCalendarBooking,
   apiCheckInCalendarBooking,
   apiEndCalendarSession,
+  apiMarkNoShowCalendarBooking,
   apiStartCalendarSession,
   fetchActiveReceptionCalendar,
   fetchReceptionCalendarByDate,
@@ -44,7 +45,7 @@ function purgeLegacyCalendarStorage() {
 
 purgeLegacyCalendarStorage();
 
-/** فترة سماح 14 دقيقة بعد وقت الحجز — ثم No-Show */
+/** مهلة حضور 14 دقيقة بعد الموعد — تُطبَّق في Laravel (bookings:process-no-shows). */
 export const NO_SHOW_GRACE_MS = 14 * 60 * 1000;
 
 export const SLOT_STATUS = {
@@ -98,35 +99,6 @@ export function parseSlotStartMs(date, hour) {
   const mm = Number(parts[1] ?? 0);
   if (!y || !m || !d || !Number.isFinite(hh)) return null;
   return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
-}
-
-function applyNoShowPolicy(slots) {
-  const now = Date.now();
-  const remaining = [];
-
-  for (const slot of slots) {
-    if (
-      slot.status !== SLOT_STATUS.reserved ||
-      slot.attendanceStatus !== ATTENDANCE_STATUS.awaiting
-    ) {
-      remaining.push(slot);
-      continue;
-    }
-
-    const startMs = parseSlotStartMs(slot.date, slot.hour);
-    if (startMs == null) {
-      remaining.push(slot);
-      continue;
-    }
-
-    if (now >= startMs + NO_SHOW_GRACE_MS) {
-      continue;
-    }
-
-    remaining.push(slot);
-  }
-
-  return remaining;
 }
 
 function notifyUpdated() {
@@ -224,12 +196,7 @@ export function loadCalendarSlots() {
     const raw = localStorage.getItem(storageKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    const slots = Array.isArray(parsed) ? parsed.map(normalizeSlot) : [];
-    const processed = applyNoShowPolicy(slots);
-    if (processed.length !== slots.length) {
-      persistCalendarSlots(processed);
-    }
-    return processed;
+    return Array.isArray(parsed) ? parsed.map(normalizeSlot) : [];
   } catch {
     return [];
   }
@@ -313,6 +280,25 @@ export async function syncReceptionLiveState(selectedDate = todayIso()) {
   }
 
   return { ok: dateResult.ok || activeResult.ok };
+}
+
+export async function markNoShowCalendarBooking(slotId) {
+  const session = getActiveStaffSession();
+  if (!isApiStaffSession(session)) {
+    return { ok: false, error: "تسجيل عدم الحضور يتطلب اتصالاً بالخادم." };
+  }
+
+  const slots = loadCalendarSlots();
+  const slot = findSlotById(slotId, slots);
+  const apiRes = await apiMarkNoShowCalendarBooking(slotId);
+  if (!apiRes.ok) return apiRes;
+
+  invalidateFinanceCache();
+  if (slot?.date) {
+    await syncCalendarFromApi(slot.date);
+  }
+  await syncActiveCalendarFromApi();
+  return { ok: true, ...apiRes };
 }
 
 export async function cancelCalendarBooking(slotId) {
@@ -556,15 +542,18 @@ export async function endCalendarSession(deviceId, date, hour) {
 
   const session = getActiveStaffSession();
   if (isApiStaffSession(session) && slot?.id) {
-    let pointsResult = null;
-    if (slot?.status === SLOT_STATUS.busy) {
-      pointsResult = awardPointsForCompletedSession(slot);
-    }
     const apiRes = await apiEndCalendarSession(slot.id);
     if (!apiRes.ok) return { ok: false, error: apiRes.error };
     invalidateFinanceCache();
     await syncActiveCalendarFromApi();
     await syncCalendarFromApi(date);
+    const pointsResult = apiRes.loyalty?.earned
+      ? {
+          ok: true,
+          earned: apiRes.loyalty.earned,
+          balance: apiRes.loyalty.balance_after,
+        }
+      : null;
     return { ok: true, pointsResult, slot };
   }
 
