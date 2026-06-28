@@ -107,7 +107,7 @@ export function restoreEmployee(list, id) {
 
 function isApiManagerSession(session) {
   if (!session || session.role !== "manager") return false;
-  if (session.source === "api") return true;
+  if (session.source !== "api") return false;
   const accountId = session.id ?? getActiveAccountIdFromUrl();
   return Boolean(getManagerApiToken(accountId));
 }
@@ -116,14 +116,14 @@ export async function refreshEmployeesFromApi() {
   const accountId = getActiveAccountIdFromUrl();
   const session = getAuthSession(accountId);
   if (!isApiManagerSession(session)) {
-    return { ok: false, skipped: true };
+    return { ok: false, skipped: true, error: "لا توجد جلسة API نشطة للمدير." };
   }
 
   const result = await fetchManagerEmployees();
   if (!result.ok) return result;
 
   saveEmployees(result.employees);
-  return { ok: true, employees: loadEmployees() };
+  return { ok: true, employees: result.employees };
 }
 
 export async function persistEmployeeArchiveApi(row) {

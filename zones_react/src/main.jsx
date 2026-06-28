@@ -7,8 +7,8 @@ import { ToastContainer } from "react-toastify";
 import "./index.css";
 import "./shared/utils/zonesAlerts.css";
 import App from "./App.jsx";
-import { runDemoBootstrap } from "./shared/demo/demoBootstrap";
 import { setupApiAuthInterceptor } from "./shared/api/setupApiAuthInterceptor";
+import { purgeLegacyMockAuth } from "./features/auth/data/mockUsersStorage";
 import { purgeLegacyFinanceData } from "./features/finance/data/financeApiCache";
 import { ThemeProvider } from "./shared/theme/ThemeProvider";
 import { BrandingProvider } from "./shared/context/BrandingContext";
@@ -16,7 +16,7 @@ import { TenantProvider } from "./shared/tenant/TenantProvider";
 import { ZonesToastProvider } from "./shared/context/ZonesToastContext";
 import { toastOptions } from "./shared/utils/zonesAlerts";
 
-runDemoBootstrap();
+purgeLegacyMockAuth();
 setupApiAuthInterceptor();
 purgeLegacyFinanceData();
 

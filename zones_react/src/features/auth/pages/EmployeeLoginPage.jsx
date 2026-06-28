@@ -7,24 +7,12 @@ import { Select } from "@/components/ui/select";
 import AuthLayout from "../../../shared/layouts/AuthLayout";
 import AuthMessage from "../components/AuthMessage";
 import { EMPLOYEE_LOGIN_PATH, MANAGER_LOGIN_PATH } from "../data/authRoutes";
-import { getLoginRedirectPath, setAuthSession } from "../data/mockUsersStorage";
+import { getLoginRedirectPath } from "../data/mockUsersStorage";
 import { loginEmployee } from "../data/employeeAuth";
 import { normalizeGmailEmail } from "../../../shared/utils/normalizeGmailEmail";
 import { clearSuperAdminSession } from "../../super-admin/data/superAdminAuth";
-import { attemptLogin, LOGIN_BLOCK_MESSAGES } from "../data/accountAccess";
 import { fetchLoungesCatalog } from "../../customer/data/loungeCatalogApi";
-import { getSuperAdminState } from "../../super-admin/data/superAdminStorage";
-import { ROLES, normalizeRole } from "../../employees/data/employeeMeta";
-
-function loadLocalHallOptions() {
-  const halls = getSuperAdminState().activeHalls || [];
-  return halls
-    .filter((hall) => hall.status === "active")
-    .map((hall) => ({
-      value: String(hall.id),
-      label: hall.name || hall.hallName || `صالة ${hall.id}`,
-    }));
-}
+import { ROLES } from "../../employees/data/employeeMeta";
 
 export default function EmployeeLoginPage() {
   const navigate = useNavigate();
@@ -35,6 +23,7 @@ export default function EmployeeLoginPage() {
   const [employeeRole, setEmployeeRole] = useState("");
   const [hallOptions, setHallOptions] = useState([]);
   const [hallsLoading, setHallsLoading] = useState(true);
+  const [hallsError, setHallsError] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -49,18 +38,23 @@ export default function EmployeeLoginPage() {
 
     const loadHalls = async () => {
       setHallsLoading(true);
+      setHallsError("");
       const result = await fetchLoungesCatalog();
       if (cancelled) return;
 
-      const apiOptions = result.ok
-        ? result.lounges.map((lounge) => ({
-            value: lounge.id,
-            label: lounge.name || lounge.hallName,
-          }))
-        : [];
+      if (!result.ok) {
+        setHallOptions([]);
+        setHallsError(result.error || "تعذر تحميل الصالات من الخادم.");
+        setHallsLoading(false);
+        return;
+      }
 
-      const merged = apiOptions.length > 0 ? apiOptions : loadLocalHallOptions();
-      setHallOptions(merged);
+      setHallOptions(
+        result.lounges.map((lounge) => ({
+          value: lounge.id,
+          label: lounge.name || lounge.hallName,
+        })),
+      );
       setHallsLoading(false);
     };
 
@@ -107,61 +101,17 @@ export default function EmployeeLoginPage() {
       role: employeeRole,
     });
 
-    if (apiResult.ok) {
-      const from = location.state?.from;
-      const fallback =
-        apiResult.redirectPath || getLoginRedirectPath(apiResult.role, apiResult.user?.id);
-      const target =
-        typeof from === "string" && from.startsWith("/employee/") && !from.startsWith("/auth")
-          ? from
-          : fallback;
-      setSubmitting(false);
-      navigate(target, { replace: true });
-      return;
-    }
-
-    const isEmployeeOnlyError = apiResult.error?.includes("ليس حساب موظف");
-    const isInvalidCredentials =
-      apiResult.error?.includes("غير صحيحة") || apiResult.error?.includes("Invalid credentials");
-
-    if (!isEmployeeOnlyError && apiResult.error && !isInvalidCredentials) {
-      setSubmitting(false);
-      setError(apiResult.error);
-      return;
-    }
-
-    const mockResult = attemptLogin(normalizedEmail, password);
     setSubmitting(false);
 
-    if (!mockResult.ok) {
-      setError(
-        isInvalidCredentials && apiResult.error
-          ? apiResult.error
-          : LOGIN_BLOCK_MESSAGES[mockResult.code] || LOGIN_BLOCK_MESSAGES.invalid,
-      );
-      return;
-    }
-
-    const role = normalizeRole(mockResult.user.role);
-    if (role !== "reception" && role !== "maintenance") {
-      setError("هذا الحساب ليس حساب موظف. استخدم صفحة دخول المدير.");
-      return;
-    }
-
-    if (String(mockResult.user.hallId ?? "") !== String(hallId)) {
-      setError("الصالة المختارة لا تطابق حسابك.");
-      return;
-    }
-
-    if (role !== employeeRole) {
-      setError("الصلاحية المختارة لا تطابق حسابك.");
+    if (!apiResult.ok) {
+      setError(apiResult.error || "تعذر تسجيل الدخول.");
       return;
     }
 
     clearSuperAdminSession();
-    setAuthSession(mockResult.user);
+
     const from = location.state?.from;
-    const fallback = getLoginRedirectPath(role, mockResult.user.id);
+    const fallback = apiResult.redirectPath || getLoginRedirectPath(apiResult.role, apiResult.user?.id);
     const target =
       typeof from === "string" && from.startsWith("/employee/") && !from.startsWith("/auth")
         ? from
@@ -178,6 +128,7 @@ export default function EmployeeLoginPage() {
       <form className="mx-auto w-full max-w-sm space-y-5" onSubmit={submit}>
         {info ? <AuthMessage tone="info">{info}</AuthMessage> : null}
         {error ? <AuthMessage tone="error">{error}</AuthMessage> : null}
+        {hallsError ? <AuthMessage tone="error">{hallsError}</AuthMessage> : null}
 
         <div className="space-y-2">
           <Label htmlFor="employee-login-email" className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -232,7 +183,7 @@ export default function EmployeeLoginPage() {
           />
           {!hallsLoading && hallOptions.length === 0 ? (
             <p className="text-[11px] text-amber-600 dark:text-amber-400">
-              لا توجد صالات متاحة حالياً.
+              لا توجد صالات متاحة — تأكد أن Laravel يعمل.
             </p>
           ) : null}
         </div>
@@ -252,7 +203,7 @@ export default function EmployeeLoginPage() {
           type="submit"
           size="lg"
           className="h-11 w-full text-sm"
-          disabled={submitting || hallsLoading}
+          disabled={submitting || hallsLoading || hallOptions.length === 0}
         >
           {submitting ? "جاري الدخول..." : "تسجيل الدخول"}
         </Button>

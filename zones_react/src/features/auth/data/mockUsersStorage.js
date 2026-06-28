@@ -369,12 +369,35 @@ export function sessionMatchesRoleHint(session, roleHint) {
 }
 
 /** استعادة جلسة المدير من حساب المدير المحفوظ (عند فتح الملف الشخصي بدون جلسة) */
+/** @deprecated API-only mode — mock restore disabled */
 export function restoreManagerSessionFromStore() {
-  const mgr =
-    loadMockUsers().find((u) => u.role === "manager") ||
-    loadMockUsers().find((u) => LEGACY_MANAGER_ROLES.has(u.role));
-  if (!mgr) return null;
-  return setAuthSession(mgr);
+  return null;
+}
+
+/** Clears non-API staff sessions so testing always requires a real login. */
+export function purgeLegacyMockAuth() {
+  if (typeof window === "undefined") return;
+
+  try {
+    const legacy = readLegacySession();
+    if (legacy?.id && !getScopedToken(legacy.id)) {
+      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(LEGACY_SESSION_KEY);
+    }
+
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(`${SESSION_KEY}::`)) continue;
+      const accountId = key.slice(`${SESSION_KEY}::`.length);
+      const session = readScopedSession(accountId);
+      if (!session) continue;
+      if (session.source !== "api" || !getScopedToken(accountId)) {
+        clearScopedAccount(accountId);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 function readSessionRaw(accountId) {
@@ -429,6 +452,14 @@ export function setApiManagerSession(user, token) {
 }
 
 export function setAuthSession(user) {
+  const accountId = user?.id;
+  const token = accountId != null ? getScopedToken(accountId) : null;
+  const isApiSession = user?.source === "api" || Boolean(token);
+
+  if (!isApiSession) {
+    return null;
+  }
+
   const loggedInAt = new Date().toISOString();
   const session = {
     id: user.id,
@@ -441,7 +472,7 @@ export function setAuthSession(user) {
     avatar: user.avatar || "",
     phone: user.phone || "",
     joinDate: user.joinDate || "",
-    source: user.source || "mock",
+    source: "api",
     loggedInAt,
   };
   try {
@@ -487,39 +518,28 @@ export function getAuthSession(accountId) {
       return null;
     }
 
-    if (parsed.source === "api" && getManagerApiToken(parsed.id ?? resolvedId)) {
+    const token = getManagerApiToken(parsed.id ?? resolvedId);
+    if (parsed.source === "api" && token) {
       return {
         ...parsed,
+        source: "api",
         role: normalizeSessionRole(parsed.role || "manager"),
         hallId: parsed.hallId ?? null,
         stationName: parsed.stationName ?? null,
       };
     }
 
-    let user = parsed.id != null ? getUserById(parsed.id) : null;
-    if (!user && parsed.email) {
-      user = findUserByEmail(parsed.email);
-    }
-    if (!user || user.active === false) {
-      clearAuthSession();
-      return null;
-    }
-
-    if (parsed.id != user.id) {
-      setAuthSession(user);
+    if (token) {
+      return {
+        ...parsed,
+        source: "api",
+        role: normalizeSessionRole(parsed.role || "manager"),
+        hallId: parsed.hallId ?? null,
+        stationName: parsed.stationName ?? null,
+      };
     }
 
-    return {
-      ...parsed,
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      role: normalizeSessionRole(user.role),
-      employeeId: user.employeeId ?? null,
-      hallId: user.hallId ?? parsed.hallId ?? null,
-      avatar: user.avatar || parsed.avatar || "",
-      phone: user.phone || parsed.phone || "",
-    };
+    return null;
   } catch {
     return null;
   }

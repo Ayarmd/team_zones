@@ -1,15 +1,13 @@
 import { Navigate } from "react-router-dom";
-import { buildManagerWorkspacePath } from "../../auth/data/accountSessionStorage";
-import { loadMockUsers, setAuthSession } from "../../auth/data/mockUsersStorage";
+import { MANAGER_LOGIN_PATH } from "../data/authRoutes";
 
-/** دخول تجريبي للمدير — للعرض بدون صفحة login */
+/** Demo login disabled — API-only mode */
 export default function ManagerDemoPage() {
-  const manager = loadMockUsers().find((u) => u.role === "manager");
-  if (manager) setAuthSession(manager);
   return (
     <Navigate
-      to={manager?.id != null ? buildManagerWorkspacePath(manager.id, "dashboard") : "/manager/login"}
+      to={MANAGER_LOGIN_PATH}
       replace
+      state={{ loginError: "الدخول التجريبي معطّل. سجّل الدخول عبر API." }}
     />
   );
 }

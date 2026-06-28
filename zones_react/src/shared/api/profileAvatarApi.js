@@ -48,6 +48,7 @@ export function syncProfileFromApi(apiUser) {
 
   setAuthSession({
     ...session,
+    source: "api",
     fullName: apiUser.full_name || apiUser.name || session.fullName,
     phone: apiUser.phone ?? session.phone,
     avatar: resolveMediaUrl(apiUser.profile_image || ""),

@@ -36,7 +36,6 @@ import {
   tableSelectColSpan,
 } from "../../../shared/hooks/useTableSelection";
 import { useTableSelectionMode } from "../../../shared/hooks/useTableSelectionMode";
-import { hallScopedKey } from "../../../shared/tenant/hallScopedStorage";
 import {
   BOOKINGS_STOP_EVENT,
   getActiveBookingsStopRecord,
@@ -45,31 +44,14 @@ import {
   resumeBookingsStop,
   startBookingsStop,
 } from "../../alerts/data/bookingsStopStorage";
+import {
+  archiveEmergencyLog,
+  fetchEmergencyLogs,
+  registerEmergencyIncident,
+  sendEmergencyNotification,
+} from "../data/emergencyAlertsApi";
 import StopBookingsFormModal from "../../alerts/components/StopBookingsFormModal";
 import "./EmergencyManagementPage.css";
-
-const CUSTOM_TYPES_KEY = () => hallScopedKey("zones-emergency-custom-types");
-const LOGS_KEY = () => hallScopedKey("zones-emergency-logs-v1");
-const ARCHIVE_KEY = () => hallScopedKey("zones-emergency-archive-v1");
-
-function loadJsonArray(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistJsonArray(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* ignore */
-  }
-}
 
 const BASE_TYPES = [
   { value: "fire", label: "حريق", icon: Flame },
@@ -77,29 +59,6 @@ const BASE_TYPES = [
   { value: "technical", label: "خلل تقني", icon: Loader },
   { value: "other", label: "أخرى", icon: Radio },
 ];
-
-function loadCustomTypeLabels() {
-  try {
-    const raw = localStorage.getItem(CUSTOM_TYPES_KEY());
-    if (!raw) return [];
-    const j = JSON.parse(raw);
-    return Array.isArray(j) ? j.map((x) => String(x).trim()).filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCustomTypeLabels(labels) {
-  try {
-    localStorage.setItem(CUSTOM_TYPES_KEY(), JSON.stringify([...new Set(labels)]));
-  } catch {
-    /* ignore */
-  }
-}
-
-function encodeCustomValue(label) {
-  return `custom::${encodeURIComponent(label)}`;
-}
 
 function decodeCustomValue(value) {
   if (!value.startsWith("custom::")) return null;
@@ -120,7 +79,13 @@ function rowIcon(typeValue) {
 function rowLabel(typeValue) {
   const c = decodeCustomValue(typeValue);
   if (c) return c;
-  return BASE_TYPES.find((t) => t.value === typeValue)?.label ?? "—";
+  const base = BASE_TYPES.find((t) => t.value === typeValue || t.label === typeValue);
+  if (base) return base.label;
+  return typeValue || "—";
+}
+
+function encodeCustomValue(label) {
+  return `custom::${encodeURIComponent(label)}`;
 }
 
 const PAGE_SIZE = 4;
@@ -129,10 +94,12 @@ const TABLE_DATA_COLS = 5;
 export default function EmergencyManagementPage() {
   const [bookingsStopped, setBookingsStopped] = useState(() => isBookingsStopped());
   const [stopModalOpen, setStopModalOpen] = useState(false);
-  const [logs, setLogs] = useState(() => loadJsonArray(LOGS_KEY()));
-  const [archived, setArchived] = useState(() => loadJsonArray(ARCHIVE_KEY()));
+  const [logs, setLogs] = useState([]);
+  const [archivedCount, setArchivedCount] = useState(0);
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState("");
   const [logSearch, setLogSearch] = useState("");
-  const [customLabels, setCustomLabels] = useState(loadCustomTypeLabels);
+  const [customLabels, setCustomLabels] = useState([]);
 
   const [registerOpen, setRegisterOpen] = useState(false);
   const [regForm, setRegForm] = useState({
@@ -146,6 +113,32 @@ export default function EmergencyManagementPage() {
   const [notifyTarget, setNotifyTarget] = useState("employees");
   const [notifyText, setNotifyText] = useState("");
   const [logPage, setLogPage] = useState(1);
+
+  const syncEmergencyLogs = useCallback(async () => {
+    setLogsLoading(true);
+    setLogsError("");
+    const result = await fetchEmergencyLogs();
+    if (!result.ok) {
+      setLogs([]);
+      setArchivedCount(0);
+      setLogsError(result.error || "تعذر تحميل سجل الطوارئ من الخادم.");
+      setLogsLoading(false);
+      return;
+    }
+    setLogs(result.logs);
+    setArchivedCount(result.archivedCount);
+    const labels = result.logs
+      .map((row) => decodeCustomValue(row.typeValue))
+      .filter(Boolean);
+    if (labels.length) {
+      setCustomLabels((prev) => [...new Set([...prev, ...labels])]);
+    }
+    setLogsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    syncEmergencyLogs();
+  }, [syncEmergencyLogs]);
 
   useEffect(() => {
     const sync = async () => {
@@ -182,18 +175,6 @@ export default function EmergencyManagementPage() {
     setBookingsStopped(true);
     zonesToastSuccess("تم إيقاف الحجوزات");
   };
-
-  useEffect(() => {
-    saveCustomTypeLabels(customLabels);
-  }, [customLabels]);
-
-  useEffect(() => {
-    persistJsonArray(LOGS_KEY(), logs);
-  }, [logs]);
-
-  useEffect(() => {
-    persistJsonArray(ARCHIVE_KEY(), archived);
-  }, [archived]);
 
   useEffect(() => {
     setLogPage(1);
@@ -239,32 +220,37 @@ export default function EmergencyManagementPage() {
     setRegisterOpen(true);
   }, []);
 
-  const submitRegister = () => {
+  const submitRegister = async () => {
     if (!regForm.description.trim() || !regForm.occurredAt.trim()) {
       zonesToastWarning("يرجى تعبئة الوصف وتاريخ وقت الحدوث.");
       return;
     }
-    let typeValue = regForm.type;
+    let typeLabel = BASE_TYPES.find((t) => t.value === regForm.type)?.label || regForm.type;
     if (regForm.type === "other") {
       const t = regForm.otherLabel.trim();
       if (!t) {
         zonesToastWarning("يرجى كتابة نوع الطوارئ عند اختيار «أخرى».");
         return;
       }
-      typeValue = encodeCustomValue(t);
+      typeLabel = t;
       setCustomLabels((prev) => (prev.includes(t) ? prev : [...prev, t]));
     }
-    const nid = Math.max(0, ...logs.map((r) => r.id)) + 1;
-    const newRow = {
-      id: nid,
-      typeValue,
+
+    const result = await registerEmergencyIncident({
+      typeLabel,
       description: regForm.description.trim(),
       occurredAt: regForm.occurredAt.replace("T", " ").slice(0, 16),
-    };
-    setLogs((prev) => [newRow, ...prev]);
-    setLogPage(1);
+    });
+
+    if (!result.ok) {
+      zonesToastInfo(result.error || "تعذر تسجيل الحالة على الخادم.");
+      return;
+    }
+
     setRegisterOpen(false);
-    zonesToastSuccess("تم تسجيل الحالة");
+    setLogPage(1);
+    await syncEmergencyLogs();
+    zonesToastSuccess(result.message || "تم تسجيل الحالة");
   };
 
   const deleteRow = async (row) => {
@@ -282,13 +268,16 @@ export default function EmergencyManagementPage() {
     });
     if (!confirmed) return;
 
-    const idSet = new Set(targets.map((t) => t.id));
-    setArchived((a) => [
-      ...a,
-      ...targets.map((t) => ({ ...t, archivedAt: new Date().toISOString() })),
-    ]);
-    setLogs((list) => list.filter((x) => !idSet.has(x.id)));
+    for (const target of targets) {
+      const result = await archiveEmergencyLog(target.id);
+      if (!result.ok) {
+        zonesToastInfo(result.error || "تعذر أرشفة السجل على الخادم.");
+        return;
+      }
+    }
+
     selection.exitSelectionMode();
+    await syncEmergencyLogs();
     zonesToastSuccess(isBulk ? `تم نقل ${targets.length} سجلات إلى الأرشيف` : "تم النقل إلى الأرشيف");
   };
 
@@ -298,16 +287,28 @@ export default function EmergencyManagementPage() {
     deleteRow(targets[0]);
   };
 
-  const submitNotify = () => {
+  const submitNotify = async () => {
     if (!notifyText.trim()) {
       zonesToastWarning("أدخل نص الإشعار");
       return;
     }
+
+    const result = await sendEmergencyNotification({
+      text: notifyText.trim(),
+      target: notifyTarget,
+    });
+
+    if (!result.ok) {
+      zonesToastInfo(result.error || "تعذر إرسال الإشعار عبر الخادم.");
+      return;
+    }
+
     const targetLabel =
       notifyTarget === "employees" ? "الموظفين" : notifyTarget === "customers" ? "الزبائن" : "الموظفين والزبائن";
-    zonesToastSuccess(`تم إرسال الإشعار إلى: ${targetLabel}`, "تم الإرسال");
+    zonesToastSuccess(`تم إرسال الإشعار إلى: ${targetLabel}`, result.message || "تم الإرسال");
     setNotifyOpen(false);
     setNotifyText("");
+    await syncEmergencyLogs();
   };
 
   const notifyPills = [
@@ -404,6 +405,9 @@ export default function EmergencyManagementPage() {
           data-zones-table
         >
           <h2 className="mb-3 text-end text-sm font-bold text-[var(--text)]">سجل الطوارئ</h2>
+          {logsError ? (
+            <p className="mb-3 text-end text-[11px] font-semibold text-red-400">{logsError}</p>
+          ) : null}
           <div className="zones-toolbar mb-4">
             <div className="zones-toolbar__search relative min-w-[200px]">
               <FileText className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -444,7 +448,13 @@ export default function EmergencyManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
-                {filteredLogs.length === 0 ? (
+                {logsLoading ? (
+                  <tr>
+                    <td colSpan={tableSelectColSpan(TABLE_DATA_COLS, selection.selectionMode)} className="px-3 py-10 text-center text-[12px] text-slate-500">
+                      جاري تحميل السجل من الخادم...
+                    </td>
+                  </tr>
+                ) : filteredLogs.length === 0 ? (
                   <tr>
                     <td colSpan={tableSelectColSpan(TABLE_DATA_COLS, selection.selectionMode)} className="px-3 py-10 text-center text-[12px] text-slate-500">
                       لا توجد حالات طوارئ مسجّلة بعد.
@@ -521,8 +531,8 @@ export default function EmergencyManagementPage() {
             </div>
           ) : null}
 
-          {archived.length > 0 ? (
-            <p className="mt-3 text-end text-[11px] text-[var(--muted)]">الأرشيف: {archived.length} سجل</p>
+          {archivedCount > 0 ? (
+            <p className="mt-3 text-end text-[11px] text-[var(--muted)]">الأرشيف: {archivedCount} سجل</p>
           ) : null}
         </div>
       </div>

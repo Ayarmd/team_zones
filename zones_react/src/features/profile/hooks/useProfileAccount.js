@@ -13,7 +13,6 @@ import {
   getAuthSession,
   getLoginRedirectPath,
   getUserById,
-  restoreManagerSessionFromStore,
   sessionMatchesRoleHint,
   updateUserProfile,
   verifyCurrentPassword,
@@ -62,19 +61,17 @@ export function useProfileAccount(roleHint) {
   }, []);
 
   useEffect(() => {
-    let active = getAuthSession();
-    if (!active && roleHint === "manager") {
-      active = restoreManagerSessionFromStore();
-    }
-    if (!active) {
+    const current = getAuthSession();
+    if (!current?.id) {
+      setLoading(false);
       navigate("/manager/login", {
         replace: true,
         state: { from: window.location.pathname },
       });
       return;
     }
-    if (roleHint && !sessionMatchesRoleHint(active, roleHint)) {
-      navigate(getLoginRedirectPath(active.role), { replace: true });
+    if (roleHint && !sessionMatchesRoleHint(current, roleHint)) {
+      navigate(getLoginRedirectPath(current.role), { replace: true });
       return;
     }
     loadUser();

@@ -66,26 +66,37 @@ export default function EmployeesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const roleTab = searchParams.get("role") || "all";
 
-  const [rows, setRows] = useState(loadEmployees);
+  const [rows, setRows] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [detailEmployee, setDetailEmployee] = useState(null);
   const [editEmployee, setEditEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const syncFromApi = async () => {
     setLoading(true);
+    setLoadError("");
     const result = await refreshEmployeesFromApi();
     if (result.ok) {
-      setRows(loadEmployees());
+      setRows(result.employees || []);
+    } else if (!result.skipped) {
+      setRows([]);
+      setLoadError(result.error || "تعذر تحميل الموظفين من الخادم.");
+      zonesToastError(result.error || "تعذر تحميل الموظفين من الخادم.");
+    } else {
+      setRows([]);
+      setLoadError(result.error || "سجّل الدخول كمدير عبر الخادم.");
     }
     setLoading(false);
   };
 
   useEffect(() => {
     syncFromApi();
-    const onUpdate = () => setRows(loadEmployees());
+    const onUpdate = () => {
+      syncFromApi();
+    };
     window.addEventListener(EMPLOYEES_STORAGE_EVENT, onUpdate);
     return () => window.removeEventListener(EMPLOYEES_STORAGE_EVENT, onUpdate);
   }, []);
@@ -150,7 +161,7 @@ export default function EmployeesPage() {
       const result = await persistEmployeeArchiveApi(row);
       if (!result.ok) {
         zonesToastError(result.error || "تعذر أرشفة الموظف");
-        if (apiTargets.length) setRows(loadEmployees());
+        await syncFromApi();
         return;
       }
     }
@@ -161,7 +172,7 @@ export default function EmployeesPage() {
     }
 
     if (apiTargets.length) {
-      setRows(loadEmployees());
+      await syncFromApi();
     } else {
       setRows(next);
       saveEmployees(next);
@@ -205,7 +216,7 @@ export default function EmployeesPage() {
       }
     }
 
-    setRows(loadEmployees());
+    await syncFromApi();
     selection.clearSelection();
     selection.exitSelectionMode();
     zonesToastSuccess(isBulk ? `تم إلغاء ${targets.length} دعوات` : "تم إلغاء الدعوة");
@@ -231,6 +242,12 @@ export default function EmployeesPage() {
     <>
     <div className="space-y-4" dir="rtl">
         <PageHeader title="الموظفين" />
+
+        {loadError ? (
+          <div className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+            {loadError}
+          </div>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-3">
           <KpiCard label="إجمالي الموظفين" value={activeStaff.length} icon={Users} />
