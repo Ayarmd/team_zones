@@ -1,9 +1,16 @@
 # Railway: set Root Directory to zones-backend-laravel in the service settings.
+# Free plan: no credit card to sign up — see deploy/DEPLOY.md and deploy/railway.env.example
+#
+# Prefer Dockerfile (includes scheduler for no-show):
+#   Settings → Builder → Dockerfile
+# Or use Nixpacks below:
+
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "php artisan migrate --force && (php artisan storage:link || true) && php artisan serve --host=0.0.0.0 --port=$PORT"
+# Dockerfile entrypoint runs migrate + scheduler + serve — no startCommand override
 healthcheckPath = "/up"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

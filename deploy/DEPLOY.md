@@ -1,221 +1,183 @@
-# نشر ZONES — Aiven + Koyeb + Vercel
+# نشر ZONES — بدون بطاقة فيزا
 
-دليل نقل المشروع من الجهاز المحلي إلى الإنتاج.
+دليل النشر المجاني للمشروع [team_zones](https://github.com/Ayarmd/team_zones).
 
-| المكوّن | المنصة | المجلد في المستودع |
-|---------|--------|-------------------|
-| قاعدة البيانات MySQL | [Aiven](https://aiven.io) | — |
-| Laravel API | [Koyeb](https://www.koyeb.com) | `zones-backend-laravel` |
-| لوحة React | [Vercel](https://vercel.com) | `zones_react` |
-| تطبيق Flutter | (لاحقاً) | `flutter-zones/final_p` |
+## المنصات الموصى بها (بدون فيزا)
 
-المستودع: [github.com/Ayarmd/team_zones](https://github.com/Ayarmd/team_zones)
+| المكوّن | المنصة | فيزا؟ | ملاحظة |
+|---------|--------|-------|--------|
+| **Laravel API** | **[Render](https://render.com)** | لا | الأفضل — Docker جاهز |
+| **بديل API** | **[Railway](https://railway.com)** | لا للتسجيل | $5 تجريبي ثم $1/شهر رصيد |
+| **MySQL** | **[Aiven Free](https://aiven.io/free-mysql-database)** | لا | خطة MySQL مجانية |
+| **React** | **[Vercel](https://vercel.com)** | لا | Root: `zones_react` |
+
+> **Koyeb** يطلب بطاقة فيزا — **لا نستخدمه**.
 
 ---
 
-## 1) رفع الكود إلى GitHub (من جهازك)
+## الترتيب الصحيح
 
-افتح PowerShell:
-
-```powershell
-cd C:\Users\DELL\Desktop\team_zones
-
-# تأكد أنك على main ومتصل بالمستودع الصحيح
-git remote -v
-# يجب أن يظهر: https://github.com/Ayarmd/team_zones.git
-
-git status
-
-# أضف كل التغييرات (لا يُرفع .env — محمي في .gitignore)
-git add -A
-
-git commit -m "$( @'
-pre-deploy: API integration, bans/no-show, Koyeb+Aiven+Vercel config
-
-Last tested local snapshot before production deploy.
-'@ )"
-
-# أول مرة قد تحتاج:
-# git push -u origin main
-
-git push origin main
 ```
-
-بعد النجاح، حدّث صفحة GitHub وتأكد أن آخر commit ظهر.
-
----
-
-## 2) Aiven — قاعدة بيانات MySQL
-
-1. سجّل في [Aiven Console](https://console.aiven.io).
-2. **Create service** → اختر **MySQL** → منطقة قريبة (مثلاً `aws-eu-central-1`) → خطة مناسبة.
-3. انتظر حتى الحالة **Running**.
-4. من **Overview** → **Connection information**:
-   - Host
-   - Port
-   - User (`avnadmin`)
-   - Password
-   - Database (`defaultdb`)
-5. حمّل **CA certificate** (`ca.pem`) — مطلوب لـ SSL.
-6. فعّل **Public access** إذا Koyeb يتصل من الإنترنت (الوضع المعتاد).
-
-احفظ القيم في ملف محلي (لا ترفعه لـ Git):
-
-```text
-deploy/aiven-mysql.env.example  ← مرجع للأسماء فقط
+1. Aiven (MySQL مجاني)
+2. Render أو Railway (Laravel API)
+3. Vercel (React)
+4. ربط CORS (APP_URL + FRONTEND_URL)
+5. اختبار login + API
 ```
 
 ---
 
-## 3) Koyeb — Laravel API
+# المسار أ — Render + Aiven + Vercel (موصى به)
 
-### 3.1 إنشاء التطبيق
+## 1) Aiven — MySQL مجاني
 
-1. [Koyeb Console](https://app.koyeb.com) → **Create App**.
-2. **GitHub** → اختر مستودع `Ayarmd/team_zones` → فرع `main`.
-3. **Builder**: Docker
-4. **Work directory** (مهم جداً للمونوريبو):
-   ```
-   zones-backend-laravel
-   ```
-5. **Dockerfile**: `Dockerfile` (نسبياً داخل المجلد أعلاه)
-6. **Port**: `8000`
-7. **Health check**: HTTP `GET` → `/up` → port `8000`
+1. ادخل [console.aiven.io](https://console.aiven.io) → سجّل بـ **GitHub** (بدون فيزا).
+2. **Create service** → **MySQL** → اختر **Free plan** (مو Trial المدفوع).
+3. بعد **Running** → **Connection information**:
+   - Host, Port, User, Password, Database
+4. حمّل **CA certificate** (`ca.pem`).
+5. فعّل **Public access** للخدمة.
 
-أو استورد `koyeb.yaml` من جذر المستودع إذا Koyeb يدعم App spec من الملف.
-
-### 3.2 متغيرات البيئة (Environment)
-
-من `deploy/koyeb.env.example` — أهم القيم:
-
-| المتغير | القيمة |
-|---------|--------|
-| `APP_ENV` | `production` |
-| `APP_DEBUG` | `false` |
-| `APP_KEY` | أنشئه: `php artisan key:generate --show` محلياً |
-| `APP_URL` | رابط Koyeb بعد أول نشر (مثلاً `https://zones-api-xxx.koyeb.app`) |
-| `FRONTEND_URL` | رابط Vercel لاحقاً |
-| `CORS_ALLOWED_ORIGINS` | نفس رابط Vercel |
-| `DB_*` | من Aiven |
-| `MYSQL_ATTR_SSL_CA` | `/var/www/html/storage/aiven-ca.pem` |
-| `FILESYSTEM_DISK` | `public` |
-| `SESSION_DRIVER` | `database` |
-| `QUEUE_CONNECTION` | `database` |
-| `CACHE_STORE` | `database` |
-
-### 3.3 شهادة SSL لـ Aiven على Koyeb
-
-**الطريقة البسيطة:** أضف ملف `ca.pem` في المستودع تحت  
-`zones-backend-laravel/storage/aiven-ca.pem` **فقط إذا المستودع private** — أو ارفعه كـ **Secret** في Koyeb.
-
-بدون الشهادة، الاتصال بـ Aiven قد يفشل.
-
-### 3.4 أول نشر
-
-- الـ `Dockerfile` يشغّل تلقائياً: `migrate --force` + `storage:link` + scheduler للـ No-Show.
-- بعد النشر افتح: `https://YOUR-SERVICE.koyeb.app/up` → يجب `200`.
-- جرّب: `https://YOUR-SERVICE.koyeb.app/api/public/branding-settings`
+احفظ القيم محلياً — راجع `deploy/aiven-mysql.env.example`.
 
 ---
 
-## 4) Vercel — React
+## 2) Render — Laravel API
 
-### 4.1 إنشاء المشروع
+### طريقة أ: Blueprint (أسهل)
 
-1. [Vercel Dashboard](https://vercel.com) → **Add New** → **Project**.
-2. Import من GitHub → `Ayarmd/team_zones`.
-3. **Root Directory** → Edit → اختر:
-   ```
-   zones_react
-   ```
-4. Framework: **Vite** (يُكتشف تلقائياً من `vercel.json`).
-5. Build: `npm run build` | Output: `dist`
+1. [dashboard.render.com](https://dashboard.render.com) → سجّل بـ GitHub (**بدون فيزا**).
+2. **New** → **Blueprint** → اختر `Ayarmd/team_zones`.
+3. Render يقرأ `render.yaml` من الجذر.
+4. في **Environment** أضف القيم السرية من `deploy/render.env.example`:
+   - `APP_KEY` — ولّده محلياً:
+     ```powershell
+     cd C:\Users\DELL\Desktop\team_zones\zones-backend-laravel
+     php artisan key:generate --show
+     ```
+   - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+   - `MYSQL_ATTR_SSL_CA` — ارفع `ca.pem` كـ Secret File إن أمكن
+5. **Create services** → انتظر البناء (5–15 دقيقة أول مرة).
 
-### 4.2 متغيرات البيئة
+### طريقة ب: يدوياً
 
-| Name | Value |
-|------|-------|
-| `VITE_API_BASE_URL` | `https://YOUR-SERVICE.koyeb.app/api` |
+1. **New** → **Web Service** → GitHub → `team_zones`.
+2. **Root Directory:** `zones-backend-laravel`
+3. **Language:** Docker
+4. **Plan:** Free
+5. **Health Check Path:** `/up`
+6. أضف متغيرات البيئة كما فوق.
 
-طبّق على Production + Preview.
-
-### 4.3 Deploy
-
-اضغط **Deploy**. بعد النجاح افتح رابط Vercel وجرب تسجيل الدخول.
-
-### 4.4 ربط CORS (عودة لـ Koyeb)
-
-عدّل في Koyeb:
+### بعد النشر
 
 ```
+https://zones-api.onrender.com/up          → 200
+https://zones-api.onrender.com/api/public/branding-settings
+```
+
+**قيود المجاني:** ينام بعد ~15 دقيقة خمول — أول طلب يأخذ 30–60 ثانية (cold start).
+
+---
+
+## 3) Vercel — React
+
+1. [vercel.com](https://vercel.com) → **Add Project** → `Ayarmd/team_zones`.
+2. **Root Directory:** `zones_react`
+3. **Environment Variable:**
+   ```
+   VITE_API_BASE_URL=https://zones-api.onrender.com/api
+   ```
+   (أو رابط Render الفعلي)
+4. **Deploy**.
+
+---
+
+## 4) ربط CORS (Render)
+
+عدّل في Render → Environment:
+
+```
+APP_URL=https://zones-api.onrender.com
 FRONTEND_URL=https://your-app.vercel.app
 CORS_ALLOWED_ORIGINS=https://your-app.vercel.app
 SANCTUM_STATEFUL_DOMAINS=your-app.vercel.app
-APP_URL=https://your-service.koyeb.app
 ```
 
-أعد نشر Koyeb (Redeploy) بعد تغيير المتغيرات.
+**Manual Deploy** لإعادة التشغيل.
 
 ---
 
-## 5) ترتيب الربط الصحيح
+# المسار ب — Railway (API + MySQL معاً)
 
-```
-1. Aiven MySQL     → شغّال + CA محفوظ
-2. Koyeb API       → APP_KEY + DB_* → /up يعمل
-3. Vercel React    → VITE_API_BASE_URL → Koyeb
-4. Koyeb مرة ثانية → FRONTEND_URL + CORS → Vercel
-5. اختبار كامل    → login + رفع صورة + حجز
-```
+مناسب إذا تبي كل شيء في مكان واحد.
 
----
+1. [railway.com](https://railway.com) → GitHub (**بدون فيزا**).
+2. **New Project** → **Deploy from GitHub** → `team_zones`.
+3. **خدمة Laravel:**
+   - Root Directory: `zones-backend-laravel`
+   - Builder: **Dockerfile**
+   - أضف `APP_KEY` ومتغيرات أخرى من `deploy/railway.env.example`
+4. **أضف MySQL:** Project → **+ New** → **Database** → **MySQL**.
+5. في خدمة Laravel → **Variables** → **Connect** MySQL (يملأ `DB_*` تلقائياً).
+6. **Networking** → **Generate Domain** → انسخ الرابط لـ `APP_URL`.
+7. Vercel: `VITE_API_BASE_URL=https://YOUR.up.railway.app/api`
 
-## 6) أوامر مفيدة بعد النشر
-
-```powershell
-# توليد APP_KEY محلياً
-cd C:\Users\DELL\Desktop\team_zones\zones-backend-laravel
-php artisan key:generate --show
-
-# اختبار API من الجهاز
-curl.exe https://YOUR-SERVICE.koyeb.app/up
-curl.exe https://YOUR-SERVICE.koyeb.app/api/public/branding-settings
-```
+**الرصيد المجاني:** $5 أول شهر → ثم ~$1/شهر. API + MySQL قد يستهلك الرصيد بسرعة — راقب Usage.
 
 ---
 
-## 7) ملفات الإعداد في المستودع
+# شهادة SSL لـ Aiven على Render
+
+1. حمّل `ca.pem` من Aiven.
+2. في Render → Service → **Secret Files** → mount أو انسخ المحتوى.
+3. أو (مستودع private فقط): ضع الملف في `zones-backend-laravel/storage/aiven-ca.pem`.
+
+بدون الشهادة، اتصال Aiven يفشل.
+
+---
+
+# ملفات الإعداد في المستودع
 
 | الملف | الغرض |
 |-------|--------|
-| `zones-backend-laravel/Dockerfile` | بناء صورة Laravel لـ Koyeb |
-| `zones-backend-laravel/docker/entrypoint.sh` | migrate + scheduler + serve |
-| `koyeb.yaml` | مواصفات خدمة Koyeb (اختياري) |
-| `zones_react/vercel.json` | إعدادات Vite SPA على Vercel |
-| `deploy/koyeb.env.example` | قالب متغيرات Koyeb |
-| `deploy/aiven-mysql.env.example` | قالب اتصال Aiven |
-| `deploy/vercel.env.example` | قالب `VITE_API_BASE_URL` |
+| `render.yaml` | Blueprint لـ Render |
+| `zones-backend-laravel/Dockerfile` | بناء Laravel |
+| `zones-backend-laravel/railway.toml` | بديل Railway (Nixpacks) |
+| `zones_react/vercel.json` | Vite على Vercel |
+| `deploy/render.env.example` | متغيرات Render |
+| `deploy/railway.env.example` | متغيرات Railway |
+| `deploy/aiven-mysql.env.example` | اتصال Aiven |
+| `deploy/vercel.env.example` | `VITE_API_BASE_URL` |
 
 ---
 
-## 8) Flutter (لاحقاً)
+# Flutter (لاحقاً)
 
-عند بناء APK/IPA للإنتاج، مرّر:
-
-```text
---dart-define=ZONEZ_PUBLIC_API_ROOT=https://YOUR-SERVICE.koyeb.app
+```bash
+flutter build apk --dart-define=ZONEZ_PUBLIC_API_ROOT=https://zones-api.onrender.com
 ```
 
-راجع `flutter-zones/final_p/lib/core/config/api_config.dart`.
-
 ---
 
-## استكشاف الأخطاء
+# استكشاف الأخطاء
 
 | المشكلة | الحل |
 |---------|------|
-| `500` على Koyeb | راجع Logs → غالباً `APP_KEY` أو `DB_*` ناقص |
-| DB connection refused | تحقق من Aiven public access + SSL CA |
-| CORS في المتصفح | `FRONTEND_URL` و `CORS_ALLOWED_ORIGINS` على Koyeb |
-| Vercel يبني من الجذر | تأكد Root Directory = `zones_react` |
-| migrate فشل | راجع Koyeb logs؛ صلاحيات MySQL على Aiven |
+| Render build فشل | راجع Logs — غالباً Composer أو ذاكرة؛ أعد Deploy |
+| 502 بعد نوم الخدمة | طبيعي على Free — انتظر 30–60 ثانية |
+| DB connection refused | Aiven public access + SSL CA |
+| CORS | `FRONTEND_URL` على Render |
+| Vercel API غلط | Root = `zones_react` + `VITE_API_BASE_URL` |
+| Railway نفد الرصيد | Services paused — انتظر الشهر أو استخدم Render |
+
+---
+
+# مقارنة سريعة
+
+| | Render | Railway |
+|---|--------|---------|
+| فيزا للتسجيل | لا | لا |
+| Laravel Docker | نعم | نعم |
+| MySQL مدمج | لا (استخدم Aiven) | نعم |
+| نوم بعد خمول | نعم (~15 دقيقة) | يتوقف إذا نفد الرصيد |
+| الأنسب لـ ZONES | **API على Render + Aiven** | **كل شيء على Railway** |

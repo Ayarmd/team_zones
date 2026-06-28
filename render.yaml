@@ -1,0 +1,63 @@
+# Render Blueprint — ZONES Laravel API (monorepo)
+# Docs: deploy/DEPLOY.md
+#
+# Dashboard: New → Blueprint → connect repo → apply this file
+# Or: Web Service → Docker → Root Directory: zones-backend-laravel
+
+services:
+  - type: web
+    name: zones-api
+    runtime: docker
+    rootDir: zones-backend-laravel
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    healthCheckPath: /up
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - zones-backend-laravel/**
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: DB_CONNECTION
+        value: mysql
+      - key: MAIL_MAILER
+        value: log
+      # Set in Render Dashboard (Environment → Secret):
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: SANCTUM_STATEFUL_DOMAINS
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MYSQL_ATTR_SSL_CA
+        sync: false
