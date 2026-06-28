@@ -15,7 +15,6 @@ php artisan view:cache
 php artisan migrate --force
 php artisan storage:link 2>/dev/null || true
 
-# No-show / ban scheduler (runs every minute in background)
 (
   while true; do
     php artisan schedule:run --verbose --no-interaction || true

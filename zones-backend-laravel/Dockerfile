@@ -1,20 +1,25 @@
-# ZONES Laravel API — production image (PHP 8.4, matches composer.lock)
-FROM php:8.4-cli-alpine
+# ZONES Laravel API — Render / Railway (PHP 8.4 + extensions Laravel needs)
+FROM php:8.4-cli-bookworm
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_MEMORY_LIMIT=-1
 
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     curl \
-    freetype-dev \
-    icu-dev \
-    libjpeg-turbo-dev \
+    git \
+    unzip \
+    libfreetype6-dev \
+    libicu-dev \
+    libjpeg62-turbo-dev \
+    libonig-dev \
     libpng-dev \
+    libxml2-dev \
     libzip-dev \
-    oniguruma-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
+        dom \
         exif \
         gd \
         intl \
@@ -22,8 +27,9 @@ RUN apk add --no-cache \
         opcache \
         pcntl \
         pdo_mysql \
+        xml \
         zip \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -35,7 +41,8 @@ RUN composer install \
     --no-interaction \
     --no-scripts \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-progress
 
 COPY . .
 
@@ -45,12 +52,13 @@ RUN composer dump-autoload --optimize --classmap-authoritative \
     && chmod -R ug+rwx storage bootstrap/cache
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 ENV PORT=8000
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD curl -fsS "http://127.0.0.1:${PORT}/up" || exit 1
 
 USER www-data
