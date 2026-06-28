@@ -1,5 +1,7 @@
-# ZONES Laravel API — production image for Koyeb (PHP 8.3)
-FROM php:8.3-cli-alpine
+# ZONES Laravel API — production image (PHP 8.4, matches composer.lock)
+FROM php:8.4-cli-alpine
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN apk add --no-cache \
     bash \
