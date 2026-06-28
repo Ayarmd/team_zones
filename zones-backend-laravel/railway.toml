@@ -1,0 +1,9 @@
+# Railway: set Root Directory to zones-backend-laravel in the service settings.
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "php artisan migrate --force && (php artisan storage:link || true) && php artisan serve --host=0.0.0.0 --port=$PORT"
+healthcheckPath = "/up"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
