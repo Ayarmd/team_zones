@@ -1,8 +1,11 @@
-# Render Blueprint — ZONES Laravel API (monorepo)
-# Docs: deploy/DEPLOY.md
+# =============================================================================
+# Render Blueprint — ZONES Laravel API
+# Repository: https://github.com/jeje430/myzones
+# Guide: render/README.md
 #
-# Dashboard: New → Blueprint → connect repo → apply this file
-# Or: Web Service → Docker → Root Directory: zones-backend-laravel
+# Dashboard: New → Blueprint → connect jeje430/myzones → Apply
+# Manual:    New → Web Service → Docker → Root: zones-backend-laravel
+# =============================================================================
 
 services:
   - type: web
@@ -10,6 +13,7 @@ services:
     runtime: docker
     rootDir: zones-backend-laravel
     dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
     region: frankfurt
     healthCheckPath: /up
@@ -18,6 +22,8 @@ services:
       paths:
         - zones-backend-laravel/**
     envVars:
+      - key: APP_NAME
+        value: ZONES
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
@@ -38,7 +44,7 @@ services:
         value: mysql
       - key: MAIL_MAILER
         value: log
-      # Set in Render Dashboard (Environment → Secret):
+      # Required — set in Render Dashboard → Environment:
       - key: APP_KEY
         sync: false
       - key: APP_URL
