@@ -110,33 +110,36 @@ class InvitationController extends Controller
 
         $registrationUrl = $this->employeeRegistrationUrl($invitation);
         $mailError = null;
+        $mailDelivered = config('mail.default') !== 'log';
 
         if (in_array($invitation->role, ['reception', 'maintenance'], true)) {
-            try {
-                Mail::to($invitation->email)->send(new EmployeeInvitationMail(
-                    employeeName: $invitation->name,
-                    roleLabel: self::ROLE_LABELS[$invitation->role] ?? $invitation->role,
-                    hallName: $invitation->station_name ?? 'Zones',
-                    shiftLabel: WorkShiftSchedule::workingHours($invitation->shift) ?? '—',
-                    registrationUrl: $registrationUrl,
-                ));
-            } catch (\Throwable $e) {
-                Log::error('employee_invitation_mail_failed', [
-                    'invitation_id' => $invitation->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $mailError = 'تم إنشاء الدعوة لكن تعذر إرسال البريد. تحقق من إعدادات Gmail.';
+            if ($mailDelivered) {
+                try {
+                    Mail::to($invitation->email)->send(new EmployeeInvitationMail(
+                        employeeName: $invitation->name,
+                        roleLabel: self::ROLE_LABELS[$invitation->role] ?? $invitation->role,
+                        hallName: $invitation->station_name ?? 'Zones',
+                        shiftLabel: WorkShiftSchedule::workingHours($invitation->shift) ?? '—',
+                        registrationUrl: $registrationUrl,
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('employee_invitation_mail_failed', [
+                        'invitation_id' => $invitation->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $mailError = 'تم إنشاء الدعوة لكن تعذر إرسال البريد. انسخ الرابط وأرسله يدوياً.';
+                }
             }
         }
 
         return response()->json([
             'message' => $mailError
                 ? $mailError
-                : 'تم إرسال الدعوة بنجاح',
+                : ($mailDelivered ? 'تم إرسال الدعوة بنجاح' : 'تم إنشاء الدعوة — انسخ الرابط وأرسله للموظف'),
             'invitation' => $invitation,
             'register_link' => $registrationUrl,
-            'mail_sent' => $mailError === null,
-        ], $mailError ? 200 : 201);
+            'mail_sent' => $mailDelivered && $mailError === null,
+        ], 201);
     }
 
     public function showByToken(string $token): JsonResponse

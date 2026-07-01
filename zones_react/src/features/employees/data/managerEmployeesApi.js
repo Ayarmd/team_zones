@@ -40,6 +40,7 @@ function mapPendingInvitation(inv) {
     accountStatus: "pending",
     isArchived: false,
     isPendingInvite: true,
+    registerLink: inv.register_link || "",
   };
 }
 

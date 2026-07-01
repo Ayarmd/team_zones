@@ -60,7 +60,10 @@ export default function SendEmployeeInviteModal({ open, onClose, onSent }) {
       return;
     }
 
-    onSent?.(result);
+    onSent?.({
+      ...result,
+      recipientEmail: trimmedEmail,
+    });
     handleClose();
   };
 

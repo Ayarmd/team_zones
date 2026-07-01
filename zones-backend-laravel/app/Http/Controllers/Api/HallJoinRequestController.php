@@ -131,30 +131,36 @@ class HallJoinRequestController extends Controller
 
         // Send mail OUTSIDE transaction so DB is already committed
         $mailError = null;
+        $mailDelivered = config('mail.default') !== 'log';
         \Log::info('[ACCEPT] sending invitation mail', [
             'request_id' => $hallJoinRequest->id,
             'recipient' => $hallJoinRequest->manager_email,
             'mailer' => config('mail.default'),
             'from' => config('mail.from.address'),
         ]);
-        try {
-            Mail::to($hallJoinRequest->manager_email)->send(new ManagerInvitationMail(
-                managerName: $hallJoinRequest->manager_name,
-                hallName: $hallJoinRequest->hall_name,
-                registrationUrl: $registrationUrl,
-            ));
-            \Log::info('[ACCEPT] invitation mail SENT OK to '.$hallJoinRequest->manager_email);
-        } catch (\Throwable $e) {
-            $mailError = $e->getMessage();
-            \Log::error('[ACCEPT] ManagerInvitationMail FAILED: '.$mailError);
+        if ($mailDelivered) {
+            try {
+                Mail::to($hallJoinRequest->manager_email)->send(new ManagerInvitationMail(
+                    managerName: $hallJoinRequest->manager_name,
+                    hallName: $hallJoinRequest->hall_name,
+                    registrationUrl: $registrationUrl,
+                ));
+                \Log::info('[ACCEPT] invitation mail SENT OK to '.$hallJoinRequest->manager_email);
+            } catch (\Throwable $e) {
+                $mailError = $e->getMessage();
+                \Log::error('[ACCEPT] ManagerInvitationMail FAILED: '.$mailError);
+            }
         }
 
         $hallJoinRequest->refresh();
 
         return response()->json([
-            'message' => 'Request accepted and invitation sent',
+            'message' => $mailDelivered && ! $mailError
+                ? 'Request accepted and invitation sent'
+                : 'Request accepted — copy registration link and send manually',
             'request' => $this->formatRequest($hallJoinRequest),
             'registration_url' => $registrationUrl,
+            'mail_sent' => $mailDelivered && $mailError === null,
             'mail_error' => $mailError,
         ]);
     }

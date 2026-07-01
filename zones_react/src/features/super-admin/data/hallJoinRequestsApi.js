@@ -56,6 +56,7 @@ export async function acceptHallJoinRequest(id, { adminNotes }) {
       request: data.request,
       registrationUrl: data.registration_url,
       mailError: data.mail_error || null,
+      mailSent: Boolean(data.mail_sent),
     };
   } catch (error) {
     return { ok: false, error: mapApiErrorMessage(error) };

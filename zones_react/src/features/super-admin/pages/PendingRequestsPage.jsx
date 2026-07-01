@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { zonesSwal, zonesToastError, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
+import { showInviteRegistrationLink } from "../../../shared/utils/showInviteRegistrationLink";
 
 import {
 
@@ -262,12 +263,18 @@ export default function PendingRequestsPage() {
     setAcceptReq(null);
     selection.exitSelectionMode();
 
-    if (result.mailError) {
+    if (result.registrationUrl) {
+      await showInviteRegistrationLink({
+        title: "رابط تسجيل المدير",
+        recipientEmail: result.request.managerEmail,
+        registerLink: result.registrationUrl,
+        mailSent: result.mailSent,
+      });
+    } else if (result.mailError) {
       zonesToastError(`تعذر إرسال البريد: ${result.mailError.slice(0, 120)}`);
     } else {
-      zonesToastSuccess(`تم إرسال بريد القبول إلى ${result.request.managerEmail}`);
+      zonesToastSuccess(`تم قبول الطلب`);
     }
-    showAcceptEmailPreview();
 
   };
 

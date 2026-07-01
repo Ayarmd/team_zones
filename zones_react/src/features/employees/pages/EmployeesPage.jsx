@@ -45,6 +45,7 @@ import {
 } from "../data/employeesStorage";
 import { confirmAction, toastSuccess } from "../utils/employeeConfirm";
 import { zonesToastError, zonesToastSuccess } from "../../../shared/utils/zonesAlerts";
+import { showInviteRegistrationLink } from "../../../shared/utils/showInviteRegistrationLink";
 
 const PAGE_SIZE = 8;
 const TABLE_DATA_COLS = 8;
@@ -229,13 +230,35 @@ export default function EmployeesPage() {
     runCancelInvite(selection.selectedIds);
   };
 
-  const onInviteSent = (result) => {
+  const onInviteSent = async (result) => {
+    await syncFromApi();
+    if (result.registerLink) {
+      await showInviteRegistrationLink({
+        title: "دعوة موظف جديد",
+        recipientEmail: result.recipientEmail,
+        registerLink: result.registerLink,
+        mailSent: result.mailSent,
+      });
+      return;
+    }
     if (result.mailSent) {
       zonesToastSuccess(result.message || "تم إرسال الدعوة بالبريد");
     } else {
       zonesToastSuccess(result.message || "تم إنشاء الدعوة");
     }
-    syncFromApi();
+  };
+
+  const handleCopyInviteLink = async (row) => {
+    if (!row.registerLink) {
+      zonesToastError("الرابط غير متاح — حدّث الصفحة بعد تحديث السيرفر.");
+      return;
+    }
+    await showInviteRegistrationLink({
+      title: `رابط تسجيل — ${row.fullName}`,
+      recipientEmail: row.email,
+      registerLink: row.registerLink,
+      mailSent: false,
+    });
   };
 
   return (
@@ -359,15 +382,24 @@ export default function EmployeesPage() {
                       </td>
                       <td className={TABLE_ACTIONS_TD}>
                         {row.isPendingInvite ? (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelInvite(row)}
-                            className="rounded-lg border border-red-300 px-3 py-1.5 text-[10px] font-bold text-red-600 dark:border-red-800 dark:text-red-400"
-                          >
-                            {selection.isSelected(row.id) && selection.count > 1
-                              ? `إلغاء ${selection.count} دعوات`
-                              : "إلغاء الدعوة"}
-                          </button>
+                          <div className="flex flex-wrap items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyInviteLink(row)}
+                              className="rounded-lg border border-[#6B5478]/40 px-3 py-1.5 text-[10px] font-bold text-[#6B5478] dark:text-[#d4c4de]"
+                            >
+                              نسخ الرابط
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCancelInvite(row)}
+                              className="rounded-lg border border-red-300 px-3 py-1.5 text-[10px] font-bold text-red-600 dark:border-red-800 dark:text-red-400"
+                            >
+                              {selection.isSelected(row.id) && selection.count > 1
+                                ? `إلغاء ${selection.count} دعوات`
+                                : "إلغاء الدعوة"}
+                            </button>
+                          </div>
                         ) : (
                           <StaffRowActions
                             onDetails={() => setDetailEmployee(row)}

@@ -48,6 +48,7 @@ class ManagerEmployeeController extends Controller
                 'account_status' => 'pending',
                 'created_at' => $inv->created_at?->toIso8601String(),
                 'expires_at' => $inv->expires_at?->toIso8601String(),
+                'register_link' => rtrim((string) config('app.frontend_url'), '/').'/employees/invite/'.$inv->token,
             ]);
 
         return response()->json([
